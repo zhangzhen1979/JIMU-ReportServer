@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,6 +96,64 @@ public class Data2Pdf {
         return jsonReturn;
     }
 
+
+    /**
+     * 将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
+     * @param jsonInput
+     *{
+     * 	"reportFile":"jzpz/jzpz",
+     * 	"fileNameKey":"voucher_code",
+     * 	"data":[
+     *       {
+     * 			"id": "1",
+     * 		    "voucher_code": "20210507SJFBX1234567",
+     * 		    "voucher_company_name": "3000XXXX有限公司",
+     * 		    "create_date": "2021年08月31日",
+     * 		    "voucher_number": "6012345234",
+     * 		    "ac_doc_typ_name": "EMS凭证",
+     * 		    "total_chn": "壹佰元整",
+     * 		    "debit_sum": "100.00",
+     * 		    "credit_sum": "100.00",
+     * 		    "post_name": "PI_USER",
+     * 		    "pages":1,
+     * 		    "detail":[
+     *                {
+     * 				    "abstract": "XXXXX店报销手机费",
+     * 				    "subject_name": "6601000000手机费",
+     * 				    "debit_amount_lc": "100.00",
+     * 				    "credit_amount_lc": ""
+     *                }
+     * 		    ]
+     *        }
+     * 	]
+     * }
+     *
+     *
+     * @return
+     */
+    @RequestMapping(value = "/data2pdf2base64", method = RequestMethod.POST)
+    public String data2PDF2Base64(@RequestBody JSONObject jsonInput) {
+
+        CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+
+        JSONObject jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput);
+
+        if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
+            String strPdfFilePathName = jsonReturn.getString("file");
+            File filePDF = new File(strPdfFilePathName);
+            if(filePDF.exists()){
+                try {
+                    byte[] b = Files.readAllBytes(Paths.get(strPdfFilePathName));
+                    return Base64.getEncoder().encodeToString(b);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // 返回处理完毕消息
+        return null;
+    }
 
     @ApiOperation("接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件")
     @RequestMapping(value = "/data2mq", method = RequestMethod.POST)
