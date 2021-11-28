@@ -84,7 +84,9 @@ convert:
 
 本服务提供REST接口供外部系统调用，提供了直接转换接口和通过MQ异步转换的接口。
 
-直接生成PDF接口URL：[http://host:port/api/data2pdf]()
+直接生成PDF接口URL：http://host:port/api/data2pdf
+
+直接生成PDF后返回Base64字符串接口URL：http://host:port/api/data2pdf2base64
 
 MQ异步生成PDF接口URL：http://host:port/api/data2mq
 
@@ -272,6 +274,8 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
 
 本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
 
+注意：返回Base64接口无此部分回写信息。
+
 当使用文件路径（Path）方式回写时，配置如下：
 
 ```json
@@ -327,6 +331,8 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
 
 业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
 
+注意：返回Base64接口无此部分信息。
+
 ```json
 	"callBackURL": "http://10.11.12.13/callback.do"
 ```
@@ -345,6 +351,8 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 ## 数据域
 
 data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
+
+注意：返回Base64接口中，数据域中只能有一个报表文件的JSON对象。
 
 # 代码结构说明
 
