@@ -1,0 +1,34 @@
+{
+	"reportPath":"new-bxd/",
+	"reportFileName":"new-bxd.jasper",
+	"outputPath":"D:/data2pdf/pdf/",
+	"fileNameField":"bill_code",
+	"data":[
+		{
+		    "bill_type_name": "手机话费直接报销单", 
+		    "bill_code": "20210528SJFBX12235", 
+		    "title": "关于XX茶品研发部XX1-4月话费报销的申请", 
+		    "applicant_name": "XX（客户端开发工程师）", 
+		    "applicant_department_name": "产品研发部", 
+		    "applicant_company_name": "产品研发部", 
+		    "acting_applicant_name": "XX（客户端开发工程师）", 
+		    "acting_phone": "13575743696", 
+		    "create_date": "2021-05-28", 
+		    "applicant_phone": "13575743696", 
+		    "accounting_company_name": "XX科技有限公司"
+		},
+		{
+		    "bill_type_name": "手机话费直接报销单", 
+		    "bill_code": "20210528SJFBX12236", 
+		    "title": "关于XX茶品研发部XX1-4月话费报销的申请", 
+		    "applicant_name": "XX（客户端开发工程师）", 
+		    "applicant_department_name": "产品研发部", 
+		    "applicant_company_name": "产品研发部", 
+		    "acting_applicant_name": "XX（客户端开发工程师）", 
+		    "acting_phone": "13575743696", 
+		    "create_date": "2021-05-28", 
+		    "applicant_phone": "13575743696", 
+		    "accounting_company_name": "XX科技有限公司"
+		}
+	]
+}

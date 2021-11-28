@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fontFamilies>
+    <fontFamily name="华文宋体2021"><!--字体名称-->
+        <normal>fonts/STSONG.TTF</normal><!--字体文件的路径-->
+        <bold>fonts/STSONG.TTF</bold>
+        <italic>fonts/STSONG.TTF</italic>
+        <boldItalic>fonts/STSONG.TTF</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding><!--这里的定义就与上面1.1的图设置相匹配了-->
+        <pdfEmbedded>true</pdfEmbedded>
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'华文宋体2021', Arial, Helvetica, sans-serif</export>
+            <export key="net.sf.jasperreports.xhtml">'华文宋体2021', Arial, Helvetica, sans-serif</export>
+        </exportFonts>
+    </fontFamily>
+</fontFamilies>

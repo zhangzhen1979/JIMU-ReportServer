@@ -1,0 +1,28 @@
+{
+	"reportPath":"old-bxd/",
+	"reportFileName":"old-bxd.jasper",
+	"outputPath":"D:/data2pdf/pdf/",
+	"fileNameField":"bill_code",
+	"data":[
+		{
+		    "bill_type_name": "促销活动费报销单", 
+		    "bill_code": "E210827CXFBGC00222", 
+		    "applicant_name": "金慧（部门职员）", 
+		    "create_date": "2021-08-27", 
+		    "budget_company_name": "电器", 
+		    "applicant_company_name": "豫南区驻马店二级区域", 
+		    "cost_center_name": "6609驻马店二级门店运营部", 
+		    "accounting_company_name": "漯河国美电器有限公司"
+		},
+		{
+		    "bill_type_name": "促销活动费报销单", 
+		    "bill_code": "E210827CXFBGC00223", 
+		    "applicant_name": "金慧（部门职员）", 
+		    "create_date": "2021-08-27", 
+		    "budget_company_name": "电器", 
+		    "applicant_company_name": "豫南区驻马店二级区域", 
+		    "cost_center_name": "6609驻马店二级门店运营部", 
+		    "accounting_company_name": "漯河国美电器有限公司"
+		}
+	]
+}

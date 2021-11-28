@@ -1,0 +1,147 @@
+{
+	"reportPath":"jzpz/",
+	"reportFileName":"jzpz.jasper",
+	"outputPath":"D:/data2pdf/pdf/",
+	"fileNameField":"voucher_code",
+	"data":[
+		{
+		    "voucher_code": "20210507SJFBX1234567", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "壹佰元整", 
+		    "debit_sum": "100.00", 
+		    "credit_sum": "100.00", 
+		    "post_name": "PI_USER",
+			"pages":1,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "100.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		},
+		{
+		    "voucher_code": "20210507SJFBX1234568", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "陆佰元整", 
+		    "debit_sum": "600.00", 
+		    "credit_sum": "600.00", 
+		    "post_name": "PI_USER",
+			"pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "600.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		}
+	]
+}
