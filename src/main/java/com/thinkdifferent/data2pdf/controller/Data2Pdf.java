@@ -6,6 +6,7 @@ import com.thinkdifferent.data2pdf.util.CreatePdfUtil;
 import com.thinkdifferent.data2pdf.util.WriteBackUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +35,7 @@ public class Data2Pdf {
 
     /**
      * 将数据生成PDF报表文件
-     * @param jsonInput
+     * @param jsonInput 传入的JSON参数
      *{
      * 	"reportFile":"jzpz/jzpz",
      * 	"fileNameKey":"voucher_code",
@@ -72,8 +73,6 @@ public class Data2Pdf {
      *        }
      * 	]
      * }
-     *
-     *
      * @return
      */
     @RequestMapping(value = "/data2pdf", method = RequestMethod.POST)
@@ -92,6 +91,9 @@ public class Data2Pdf {
             jsonReturn.put("message", "PDF reoprt create error ,OR PDF file write back error. OR API call back error." );
         }
 
+        if(jsonReturn.has("file")){
+            jsonReturn.remove("file");
+        }
         // 返回处理完毕消息
         return jsonReturn;
     }
@@ -99,7 +101,7 @@ public class Data2Pdf {
 
     /**
      * 将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
-     * @param jsonInput
+     * @param jsonInput 传入的JSON参数
      *{
      * 	"reportFile":"jzpz/jzpz",
      * 	"fileNameKey":"voucher_code",
@@ -127,8 +129,6 @@ public class Data2Pdf {
      *        }
      * 	]
      * }
-     *
-     *
      * @return
      */
     @RequestMapping(value = "/data2pdf2base64", method = RequestMethod.POST)
@@ -140,10 +140,17 @@ public class Data2Pdf {
 
         if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
             String strPdfFilePathName = jsonReturn.getString("file");
+            if(strPdfFilePathName != null){
+                String[] strFiles = strPdfFilePathName.split(";");
+                strPdfFilePathName = strFiles[0];
+            }
+
             File filePDF = new File(strPdfFilePathName);
             if(filePDF.exists()){
                 try {
                     byte[] b = Files.readAllBytes(Paths.get(strPdfFilePathName));
+                    // 转换为byte后，PDF文件即可删除
+                    filePDF.delete();
                     return Base64.getEncoder().encodeToString(b);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -155,6 +162,62 @@ public class Data2Pdf {
         return null;
     }
 
+    /**
+     * 将数据生成PDF报表文件，返回Base64之后的文件内容，可供页面直接显示。
+     * 此接口支持返回多个PDF文件的Base64值。
+     * @param jsonInput 传入的JSON参数。内容与“data2pdf2base64”接口相同，data中可以有多个JSON对象。
+     * @return
+     */
+    @RequestMapping(value = "/data2pdfs2base64", method = RequestMethod.POST)
+    public JSONObject data2PDFs2Base64(@RequestBody JSONObject jsonInput) {
+        CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+
+        JSONObject jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput);
+
+        if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
+            JSONArray jsonArrayPDF = new JSONArray();
+
+            String strPdfFilePathName = jsonReturn.getString("file");
+
+            if(strPdfFilePathName != null){
+                String[] strFiles = strPdfFilePathName.split(";");
+                for(int i=0; i<strFiles.length; i++){
+                    File filePDF = new File(strFiles[i]);
+                    if(filePDF.exists()){
+                        try {
+                            byte[] b = Files.readAllBytes(Paths.get(strFiles[i]));
+                            JSONObject jsonObjectPDF = new JSONObject();
+                            jsonObjectPDF.put("filename", filePDF.getName());
+                            jsonObjectPDF.put("base64", Base64.getEncoder().encodeToString(b));
+                            jsonArrayPDF.add(jsonObjectPDF);
+                            // 转换为byte后，PDF文件即可删除
+                            filePDF.delete();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+
+                jsonReturn.put("base64", jsonArrayPDF);
+            }
+
+
+        }
+
+        if(jsonReturn.has("file")){
+            jsonReturn.remove("file");
+        }
+
+        // 返回处理完毕消息
+        return jsonReturn;
+    }
+
+    /**
+     * 接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件
+     * @param jsonInput 传入的JSON参数。与接口“data2pdf”传入的内容相同
+     * @return
+     */
     @ApiOperation("接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件")
     @RequestMapping(value = "/data2mq", method = RequestMethod.POST)
     public Map<String, String> data2MQ(@RequestBody JSONObject jsonInput) {

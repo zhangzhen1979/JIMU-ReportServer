@@ -84,9 +84,9 @@ convert:
 
 本服务提供REST接口供外部系统调用，提供了直接转换接口和通过MQ异步转换的接口。
 
-直接生成PDF接口URL：http://host:port/api/data2pdf
+## 生成PDF接口说明
 
-直接生成PDF后返回Base64字符串接口URL：http://host:port/api/data2pdf2base64
+直接生成PDF接口URL：http://host:port/api/data2pdf
 
 MQ异步生成PDF接口URL：http://host:port/api/data2mq
 
@@ -254,7 +254,7 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
 
 以下分块解释传入参数每部分的内容。
 
-## 输入信息
+### 输入信息
 
 系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的PDF文件。
 
@@ -270,7 +270,7 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
 - reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
 - fileNameKey：必填。本服务允许对一个报表模板，一次传入多组数据，对应生成多个PDF报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
 
-## 回写信息
+### 回写信息
 
 本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
 
@@ -327,7 +327,7 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
   - basepath：ftp服务中，此用户的根路径。可用于存放上传时生成的临时文件。
   - filepath：文件所在的下级路径。最终存储的路径为：basepath + filepath 。
 
-## 回调信息
+### 回调信息
 
 业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
 
@@ -348,11 +348,251 @@ MQ异步生成PDF接口URL：http://host:port/api/data2mq
 http://10.11.12.13/callback.do?file=001-online&flag=success
 ```
 
-## 数据域
+### 数据域
 
 data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
 
-注意：返回Base64接口中，数据域中只能有一个报表文件的JSON对象。
+### 返回信息
+
+接口返回信息示例如下：
+
+```json
+{
+    "flag": "success",
+    "message": "PDF reoprt create success. PDF file write back success. API call back success."
+}
+```
+
+- flag：处理状态。success，成功；error，错误，失败。
+- message：返回接口消息。
+
+
+
+## 生成PDF后转换为Base64字符串返回
+
+生成一个PDF后返回Base64字符串接口URL：http://host:port/api/data2pdf2base64
+
+生成多个PDF后返回Base64字符串接口URL：http://host:port/api/data2pdfs2base64
+
+接口调用方式：POST
+
+传入参数形式：JSON
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"jzpz/jzpz",
+	"fileNameKey":"voucher_code",
+    "data":[
+		{
+			"id": "1",
+		    "voucher_code": "20210507SJFBX1234567", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "壹佰元整", 
+		    "debit_sum": "100.00", 
+		    "credit_sum": "100.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "100.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		},
+		{
+			"id": "2",
+		    "voucher_code": "20210507SJFBX1234568", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "陆佰元整", 
+		    "debit_sum": "600.00", 
+		    "credit_sum": "600.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "600.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		}
+	]
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+### 输入信息
+
+系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的PDF文件。
+
+注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
+
+以下是输入设置部分：
+
+```json
+	"reportFile":"jzpz/jzpz",
+	"fileNameKey":"voucher_code",
+```
+
+- reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
+- fileNameKey：必填。本服务允许对一个报表模板，一次传入多组数据，对应生成多个PDF报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
+
+### 数据域
+
+data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
+
+注意：
+
+- data2pdf2base64接口中，数据域中只有第一个报表文件的JSON对象有效，会生成PDF后返回Base64字符串。
+- data2pdfs2base64接口中，数据域中可以有多个JSON对象数据。
+
+### 返回信息
+
+data2pdf2base64接口返回信息示例如下：
+
+```json
+JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
+```
+
+- 返回Base64编码后的PDF文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
+
+
+
+data2pdfs2base64接口返回信息示例如下：
+
+```json
+{
+    "flag": "success",
+    "message": "Create Pdf Report file Success",
+    "base64": [
+        {
+            "filename": "20210507SJFBX1234567.pdf",
+            "base64": "JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVy…………"
+        },
+        {
+            "filename": "20210507SJFBX1234568.pdf",
+            "base64": "JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVy…………"
+        }
+    ]
+}
+```
+
+- flag：处理状态。success，成功；error，错误，失败。
+- message：返回接口消息。
+- base64
+  - filename：文件名
+  - base64：文件Base64编码之后的字符串。
 
 # 代码结构说明
 

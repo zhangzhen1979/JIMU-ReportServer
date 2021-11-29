@@ -63,6 +63,7 @@ public class CreatePdfUtil {
             JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "cacheDir");
             virtualizer.setReadOnly(true);
 
+            String strOutputFileNames = "";
             // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
             for(int i=0;i<jsonData.size();i++){
                 // 从指定的key中取值，设定新生成的PDF报表的文件名
@@ -83,11 +84,17 @@ public class CreatePdfUtil {
 
                 // 生成pdf格式的报表文件
                 data2PdfService.CreatePdf(mapParam, jasperReport, strOutputPathFileName);
-
-                jsonReturn.put("flag", "success" );
-                jsonReturn.put("message", "Create Pdf Report file Success" );
-                jsonReturn.put("file", strOutputPathFileName);
+                strOutputFileNames = strOutputFileNames + strOutputPathFileName + ";";
             }
+
+            if(strOutputFileNames.endsWith(";")){
+                strOutputFileNames = strOutputFileNames.substring(0, strOutputFileNames.length()-1);
+            }
+
+            jsonReturn.put("flag", "success" );
+            jsonReturn.put("message", "Create Pdf Report file Success" );
+            jsonReturn.put("file", strOutputFileNames);
+
             // manually cleaning up
             virtualizer.cleanup();
 
