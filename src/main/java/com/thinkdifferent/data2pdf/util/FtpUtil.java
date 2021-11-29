@@ -15,7 +15,7 @@ import java.net.SocketException;
 
 public class FtpUtil {
 
-    private final static Log logger = LogFactory.getLog(FtpUtil.class);
+    private final static Log log = LogFactory.getLog(FtpUtil.class);
     /** 本地字符编码 */
     private static String LOCAL_CHARSET = "GBK";
 
@@ -46,17 +46,17 @@ public class FtpUtil {
             ftpClient.connect(strFtpHost, intFtpPort);// 连接FTP服务器
             ftpClient.login(strFtpUserName, strFtpPassWord);// 登陆FTP服务器
             if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
-                logger.info("未连接到FTP，用户名或密码错误。");
+                log.info("未连接到FTP，用户名或密码错误。");
                 ftpClient.disconnect();
             } else {
-                logger.info("FTP连接成功。");
+                log.info("FTP连接成功。");
             }
         } catch (SocketException e) {
             e.printStackTrace();
-            logger.info("FTP的IP地址可能错误，请正确配置。");
+            log.info("FTP的IP地址可能错误，请正确配置。");
         } catch (IOException e) {
             e.printStackTrace();
-            logger.info("FTP的端口错误,请正确配置。");
+            log.info("FTP的端口错误,请正确配置。");
         }
         return ftpClient;
     }
@@ -113,14 +113,14 @@ public class FtpUtil {
                 isRetrieveFile.close();
             }
         } catch (FileNotFoundException e) {
-            logger.error("没有找到" + strFtpPath + "文件");
+            log.error("没有找到" + strFtpPath + "文件");
             e.printStackTrace();
         } catch (SocketException e) {
-            logger.error("连接FTP失败.");
+            log.error("连接FTP失败.");
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-            logger.error("文件读取错误。");
+            log.error("文件读取错误。");
             e.printStackTrace();
         } finally {
 
