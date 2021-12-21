@@ -1,13 +1,11 @@
 package com.thinkdifferent.data2pdf.util;
 
+import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.extra.ftp.Ftp;
+import cn.hutool.extra.ftp.FtpConfig;
+import cn.hutool.extra.ftp.FtpMode;
+import cn.hutool.http.HttpUtil;
 import net.sf.json.JSONObject;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -16,7 +14,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
 public class WriteBackUtil {
     /**
      * 通用回写、回调处理
@@ -53,6 +50,8 @@ public class WriteBackUtil {
                 }
 
                 if(!"path".equalsIgnoreCase(strWriteBackType)){
+                    boolean blnFlag = false;
+
                     // 回写文件
                     Map mapWriteBackHeaders = new HashMap<>();
                     if(jsonInput.get("writeBackHeaders") != null){
@@ -65,30 +64,57 @@ public class WriteBackUtil {
                         jsonReturn = writeBack2Api(strPdfFilePathName, strWriteBackURL, mapWriteBackHeaders);
                     }else if("ftp".equalsIgnoreCase(strWriteBackType)){
                         // ftp回写
+                        boolean blnPassive = jsonWriteBack.getBoolean("passive");
                         String strFtpHost = jsonWriteBack.getString("host");
                         int intFtpPort = jsonWriteBack.getInt("port");
                         String strFtpUserName = jsonWriteBack.getString("username");
                         String strFtpPassWord = jsonWriteBack.getString("password");
-                        String strFtpBasePath = jsonWriteBack.getString("basepath");
                         String strFtpFilePath = jsonWriteBack.getString("filepath");
 
+                        boolean blnFptSuccess = false;
                         FileInputStream in=new FileInputStream(filePDF);
-                        boolean blnFptSuccess = FtpUtil.uploadFile(strFtpHost, intFtpPort, strFtpUserName, strFtpPassWord,
-                                strFtpBasePath, strFtpFilePath, filePDF.getName(), in);
+
+                        Ftp ftp = null;
+                        try {
+                            if(blnPassive){
+                                // 服务器需要代理访问，才能对外访问
+                                FtpConfig ftpConfig = new FtpConfig(strFtpHost, intFtpPort,
+                                        strFtpUserName, strFtpPassWord,
+                                        CharsetUtil.CHARSET_UTF_8);
+                                ftp = new Ftp(ftpConfig, FtpMode.Passive);
+                            }else{
+                                // 服务器不需要代理访问
+                                ftp = new Ftp(strFtpHost, intFtpPort,
+                                        strFtpUserName, strFtpPassWord);
+                            }
+
+                            blnFptSuccess =  ftp.upload(strFtpFilePath, filePDF.getName(), in);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                if (ftp != null) {
+                                    ftp.close();
+                                }
+
+                                if(in != null){
+                                    in.close();
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
 
                         if(blnFptSuccess){
-                            jsonReturn.put("flag", "success");
-                            jsonReturn.put("message", "Upload PDF file to FTP success.");
-                        }else{
-                            jsonReturn.put("flag", "error");
-                            jsonReturn.put("message", "Upload PDF file to FTP error.");
+                            blnFlag = true;
                         }
 
                     }
 
                     // 不是直接写入路径（path），则存储在本地文件夹中的pdf文件都是临时文件，需要在传输后删除
-                    String strFlag = jsonReturn.getString("flag");
-                    if("success".equalsIgnoreCase(strFlag)){
+                    if(blnFlag){
                         if(filePDF.exists()){
                             filePDF.delete();
                         }
@@ -97,9 +123,21 @@ public class WriteBackUtil {
                     // 回调对方系统提供的CallBack方法。
                     if(jsonInput.get("callBackURL")!=null){
                         String strCallBackURL = String.valueOf(jsonInput.get("callBackURL"));
-                        strCallBackURL = strCallBackURL + "?file=" + strPdfFileName + "&flag=" + strFlag;
 
-                        sendGet(strCallBackURL);
+                        Map mapCallBackHeaders = new HashMap<>();
+                        if (jsonInput.get("callBackHeaders") != null) {
+                            mapCallBackHeaders = (Map) jsonInput.get("callBackHeaders");
+                        }
+
+                        Map mapParams = new HashMap<>();
+                        mapParams.put("file", strPdfFileName);
+                        if(blnFlag){
+                            mapParams.put("flag", "success");
+                        }else{
+                            mapParams.put("flag", "error");
+                        }
+
+                        callBack(strCallBackURL, mapCallBackHeaders, mapParams);
                     }
 
                 }
@@ -163,7 +201,7 @@ public class WriteBackUtil {
                             .append("Content-Disposition: form-data; name=\"")
                             .append(entry.getKey())
                             .append("\"").append(strNewLine).append(strNewLine)
-                            .append(String.valueOf(entry.getValue()))
+                            .append(entry.getValue())
                             .append(strNewLine);
                 }
                 out.write(stringBuilder.toString().getBytes(Charset.forName("UTF-8")));
@@ -214,10 +252,9 @@ public class WriteBackUtil {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
                 BufferedReader reader = new BufferedReader(inputStreamReader);
         ) {
-            String strLine = null;
+            String strLine;
             StringBuffer sb = null;
             while ((strLine = reader.readLine()) != null) {
-                System.out.println(strLine);
                 sb.append(strLine);
             }
 
@@ -231,40 +268,29 @@ public class WriteBackUtil {
     }
 
 
-    ////////////////////////////////////////////////////////////
-    private static final CloseableHttpClient httpclient = HttpClients.createDefault();
-
     /**
-     * 发送HttpGet请求
-     * @param strURL API的URL地址
-     * @return 响应的字符串内容
+     * 回调业务系统提供的接口
+     * @param strWriteBackURL 回调接口URL
+     * @param mapWriteBackHeaders 请求头参数
+     * @param mapParams 参数
+     * @return JSON格式的返回结果
      */
-    public static String sendGet(String strURL) {
+    private static JSONObject callBack(String strWriteBackURL, Map<String,String> mapWriteBackHeaders, Map<String, Object> mapParams){
+        //发送get请求并接收响应数据
+        String strResponse = HttpUtil.createGet(strWriteBackURL).
+                addHeaders(mapWriteBackHeaders).form(mapParams)
+                .execute().body();
 
+        JSONObject jsonReturn = new JSONObject();
+        if(strResponse != null){
+            jsonReturn.put("flag", "success");
+            jsonReturn.put("message", "Convert Office File Callback Success.\n" +
+                    "Message is :\n" +
+                    strResponse);
+        }
 
-        HttpGet httpGet = new HttpGet(strURL);
-        CloseableHttpResponse response = null;
-        try {
-            response = httpclient.execute(httpGet);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-        String strResult = null;
-        try {
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                strResult = EntityUtils.toString(entity);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                response.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return strResult;
+        return jsonReturn;
     }
+
 
 }
