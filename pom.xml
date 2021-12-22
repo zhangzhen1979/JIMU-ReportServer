@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.4</version>
+        <version>2.4.13</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.thinkdifferent</groupId>
     <artifactId>data2pdf</artifactId>
-    <version>0.5</version>
+    <version>0.6</version>
     <name>data2pdf</name>
     <description>JSON Data to PDF</description>
     <properties>
@@ -38,6 +38,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
+            <version>2.6.1</version>
         </dependency>
 
         <!-- JSON工具包 -->
@@ -112,16 +113,17 @@
             <version>1.4.01</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.alibaba.cloud/spring-cloud-starter-alibaba-nacos-config -->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+            <version>2021.1</version>
         </dependency>
-
+        <!-- https://mvnrepository.com/artifact/com.alibaba.cloud/spring-cloud-starter-alibaba-nacos-discovery -->
         <dependency>
-            <groupId>commons-net</groupId>
-            <artifactId>commons-net</artifactId>
-            <version>3.8.0</version>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>2021.1</version>
         </dependency>
 
     </dependencies>
