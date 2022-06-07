@@ -36,6 +36,7 @@ public class Data2Pdf {
     /**
      * 将数据生成PDF报表文件
      * @param jsonInput 传入的JSON参数
+     *  生成多个PDF报表文件JSON示例
      *{
      * 	"reportFile":"jzpz/jzpz",
      * 	"fileNameKey":"voucher_code",
@@ -73,6 +74,53 @@ public class Data2Pdf {
      *        }
      * 	]
      * }
+     *
+     *  生成单个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dah/jb-4cm",
+     * 	"fileName":"dahjb",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     * 		{
+     * 			"year": "2022",
+     * 			"fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0001",
+     * 		    "barcode":"1234567891"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0002",
+     * 		    "barcode":"1234567892"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0003",
+     * 		    "barcode":"1234567893"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0004",
+     * 		    "barcode":"1234567894"
+     * 		}
+     *   ]
+     * }
+     *
      * @return
      */
     @RequestMapping(value = "/data2pdf", method = RequestMethod.POST)
@@ -85,15 +133,12 @@ public class Data2Pdf {
         boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
         if(blnSuccess){
             jsonReturn.put("flag", "success" );
-            jsonReturn.put("message", "PDF reoprt create success. PDF file write back success. API call back success." );
+            jsonReturn.put("message", jsonReturn.getString("message") + " PDF file write back success. API call back success." );
         }else{
             jsonReturn.put("flag", "error" );
-            jsonReturn.put("message", "PDF reoprt create error ,OR PDF file write back error. OR API call back error." );
+            jsonReturn.put("message", jsonReturn.getString("message") + " ,OR PDF file write back error. OR API call back error." );
         }
 
-        if(jsonReturn.has("file")){
-            jsonReturn.remove("file");
-        }
         // 返回处理完毕消息
         return jsonReturn;
     }
@@ -102,6 +147,7 @@ public class Data2Pdf {
     /**
      * 将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
      * @param jsonInput 传入的JSON参数
+     *  生成多个PDF报表文件JSON示例（本接口只能生成1个PDF）
      *{
      * 	"reportFile":"jzpz/jzpz",
      * 	"fileNameKey":"voucher_code",
@@ -129,6 +175,53 @@ public class Data2Pdf {
      *        }
      * 	]
      * }
+     *
+     *  生成单个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dah/jb-4cm",
+     * 	"fileName":"dahjb",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     * 		{
+     * 			"year": "2022",
+     * 			"fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0001",
+     * 		    "barcode":"1234567891"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0002",
+     * 		    "barcode":"1234567892"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0003",
+     * 		    "barcode":"1234567893"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0004",
+     * 		    "barcode":"1234567894"
+     * 		}
+     *   ]
+     * }
+     *
      * @return
      */
     @RequestMapping(value = "/data2pdf2base64", method = RequestMethod.POST)
