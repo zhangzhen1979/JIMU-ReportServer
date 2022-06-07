@@ -105,9 +105,9 @@ convert:
 
 ## 生成PDF接口说明
 
-直接生成PDF接口URL：http://host:port/api/data2pdf
+直接生成PDF接口URL：http://host:port/api/json2pdf
 
-MQ异步生成PDF接口URL：http://host:port/api/data2mq
+MQ异步生成PDF接口URL：http://host:port/api/json2mq
 
 接口调用方式：POST
 
@@ -394,9 +394,9 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 ## 生成PDF后转换为Base64字符串返回
 
-生成一个PDF后返回Base64字符串接口URL：http://host:port/api/data2pdf2base64
+生成一个PDF后返回Base64字符串接口URL：http://host:port/api/json2pdf2base64
 
-生成多个PDF后返回Base64字符串接口URL：http://host:port/api/data2pdfs2base64
+生成多个PDF后返回Base64字符串接口URL：http://host:port/api/json2pdfs2base64
 
 接口调用方式：POST
 

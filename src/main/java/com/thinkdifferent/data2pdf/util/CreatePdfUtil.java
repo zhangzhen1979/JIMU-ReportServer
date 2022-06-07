@@ -10,6 +10,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -19,101 +20,99 @@ import java.util.Map;
 @Component
 public class CreatePdfUtil {
 
-    public JSONObject data2PDF(Data2PdfService data2PdfService, JSONObject jsonInput) {
+    public JSONObject data2PDF(Data2PdfService data2PdfService, JSONObject jsonInput,
+                               HttpServletResponse response)
+            throws Exception{
         JSONObject jsonReturn = new JSONObject();
         jsonReturn.put("flag", "error" );
         jsonReturn.put("message", "Create Pdf file Error" );
 
-        try{
-            // 报表文件路径和文件名（相对路径、文件名，不包含扩展名）
-            String strReportFile = jsonInput.getString("reportFile");
-            // 将输入路径中的\全部换为/
-            strReportFile = strReportFile.replaceAll("\\\\", "/");
-            // 获取报表路径（相对路径名）
-            String strReportPath = strReportFile.substring(0, strReportFile.lastIndexOf("/")+1);
-            if(strReportPath.startsWith("/")){
-                strReportPath = strReportPath.substring(1, strReportPath.length());
+        // 报表文件路径和文件名（相对路径、文件名，不包含扩展名）
+        String strReportFile = jsonInput.getString("reportFile");
+        // 将输入路径中的\全部换为/
+        strReportFile = strReportFile.replaceAll("\\\\", "/");
+        // 获取报表路径（相对路径名）
+        String strReportPath = strReportFile.substring(0, strReportFile.lastIndexOf("/")+1);
+        if(strReportPath.startsWith("/")){
+            strReportPath = strReportPath.substring(1, strReportPath.length());
+        }
+
+        String strWriteBackType = "path";
+        // 本地服务报表输出路径
+        String strOutPutPath = Data2PDFConfig.outPutPath;
+        if(jsonReturn.get("writeBackType")!=null){
+            strWriteBackType = String.valueOf(jsonReturn.get("writeBackType"));
+
+            // 回写接口或回写路径
+            JSONObject jsonWriteBack = JSONObject.fromObject(jsonReturn.get("writeBack"));
+            // 如果回写类型是path，则将传入路径的值赋值给“输出路径”变量
+            if("path".equalsIgnoreCase(strWriteBackType)){
+                strOutPutPath = jsonWriteBack.getString("path");
             }
+        }
 
-            String strWriteBackType = "path";
-            // 本地服务报表输出路径
-            String strOutPutPath = Data2PDFConfig.outPutPath;
-            if(jsonReturn.get("writeBackType")!=null){
-                strWriteBackType = String.valueOf(jsonReturn.get("writeBackType"));
+        // 按照数据，生成多个PDF文件：报表文件名对应的JSON中的key
+        String strFileNameKey = null;
+        if(jsonInput.has("fileNameKey")){
+            strFileNameKey = jsonInput.getString("fileNameKey");
+        }
+        // 或者，生成一个PDF文件：获取PDF文件名
+        String strPdfFileName = null;
+        if(jsonInput.has("fileName")){
+            strPdfFileName = jsonInput.getString("fileName");
+        }
 
-                // 回写接口或回写路径
-                JSONObject jsonWriteBack = JSONObject.fromObject(jsonReturn.get("writeBack"));
-                // 如果回写类型是path，则将传入路径的值赋值给“输出路径”变量
-                if("path".equalsIgnoreCase(strWriteBackType)){
-                    strOutPutPath = jsonWriteBack.getString("path");
-                }
-            }
+        JSONArray jsonData = jsonInput.getJSONArray("data");
 
-            // 按照数据，生成多个PDF文件：报表文件名对应的JSON中的key
-            String strFileNameKey = null;
-            if(jsonInput.has("fileNameKey")){
-                strFileNameKey = jsonInput.getString("fileNameKey");
-            }
-            // 或者，生成一个PDF文件：获取PDF文件名
-            String strPdfFileName = null;
-            if(jsonInput.has("fileName")){
-                strPdfFileName = jsonInput.getString("fileName");
-            }
+        // 获取报表模板文件流。
+        String strReportPathFileName = System.getProperty("user.dir") + "/reportfile/" + strReportFile + ".jasper";
+        InputStream jasperStream = new FileInputStream(strReportPathFileName);
+        // 加载报表模板
+        JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
 
-            JSONArray jsonData = jsonInput.getJSONArray("data");
+        //报表文件临时存储设置，切记！！此临时文件夹一定要真实存在！！！
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "cacheDir");
+        virtualizer.setReadOnly(true);
 
-            // 获取报表模板文件流。
-            String strReportPathFileName = System.getProperty("user.dir") + "/reportfile/" + strReportFile + ".jasper";
-            InputStream jasperStream = new FileInputStream(strReportPathFileName);
-            // 加载报表模板
-            JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
+        String strOutputFileNames = "";
 
-            //报表文件临时存储设置，切记！！此临时文件夹一定要真实存在！！！
-            JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "cacheDir");
-            virtualizer.setReadOnly(true);
+        if(strPdfFileName!=null && !"".equals(strPdfFileName)){
+            // 如果“fileName”不为空，则生成一个PDF报表；否则生成多个PDF报表文件
+            strOutputFileNames = strPdfFileName + ".pdf";
+            String strOutputPathFileName = strOutPutPath+strOutputFileNames;
 
-            String strOutputFileNames = "";
-
-            if(strPdfFileName!=null && !"".equals(strPdfFileName)){
-                // 如果“fileName”不为空，则生成一个PDF报表；否则生成多个PDF报表文件
-                strOutputFileNames = strPdfFileName + ".pdf";
-                String strOutputPathFileName = strOutPutPath+strOutputFileNames;
+            save2Pdf(strReportPath, virtualizer,
+                    strOutputPathFileName,null, jsonData,
+                    data2PdfService, jasperReport,
+                    response);
+        }else{
+            // 否则生成多个PDF报表文件
+            // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
+            for(int i=0;i<jsonData.size();i++){
+                // 从指定的key中取值，设定新生成的PDF报表的文件名
+                String strFileName = jsonData.getJSONObject(i).getString(strFileNameKey)+".pdf";
+                // 设定pdf输出的路径和文件名
+                String strOutputPathFileName = strOutPutPath+strFileName;
 
                 save2Pdf(strReportPath, virtualizer,
-                        strOutputPathFileName,null, jsonData,
-                        data2PdfService, jasperReport);
-            }else{
-                // 否则生成多个PDF报表文件
-                // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
-                for(int i=0;i<jsonData.size();i++){
-                    // 从指定的key中取值，设定新生成的PDF报表的文件名
-                    String strFileName = jsonData.getJSONObject(i).getString(strFileNameKey)+".pdf";
-                    // 设定pdf输出的路径和文件名
-                    String strOutputPathFileName = strOutPutPath+strFileName;
+                        strOutputPathFileName,jsonData.getJSONObject(i),null,
+                        data2PdfService, jasperReport,
+                        response);
 
-                    save2Pdf(strReportPath, virtualizer,
-                            strOutputPathFileName,jsonData.getJSONObject(i),null,
-                            data2PdfService, jasperReport);
-
-                    strOutputFileNames = strOutputFileNames + strOutputPathFileName + ";";
-                }
-
-                if(strOutputFileNames.endsWith(";")){
-                    strOutputFileNames = strOutputFileNames.substring(0, strOutputFileNames.length()-1);
-                }
+                strOutputFileNames = strOutputFileNames + strOutputPathFileName + ";";
             }
 
-            jsonReturn.put("flag", "success" );
-            jsonReturn.put("message", "Create Pdf Report file Success." );
-            jsonReturn.put("file", strOutputFileNames);
-
-            // manually cleaning up
-            virtualizer.cleanup();
-            jasperReport = null;
-
-        }catch (Exception e){
-            e.printStackTrace();
+            if(strOutputFileNames.endsWith(";")){
+                strOutputFileNames = strOutputFileNames.substring(0, strOutputFileNames.length()-1);
+            }
         }
+
+        jsonReturn.put("flag", "success" );
+        jsonReturn.put("message", "Create Pdf Report file Success." );
+        jsonReturn.put("file", strOutputFileNames);
+
+        // manually cleaning up
+        virtualizer.cleanup();
 
         return jsonReturn;
     }
@@ -126,11 +125,13 @@ public class CreatePdfUtil {
      * @param joData 传入的JSON数据对象（JSONObject）
      * @param data2PdfService Service对象
      * @param jasperReport JasperReport报表模板对象
+     * @param response Http响应对象
      * @throws Exception
      */
     private void save2Pdf(String strReportPath, JRFileVirtualizer virtualizer,
                             String strOutputPathFileName, JSONObject joData, JSONArray jaData,
-                            Data2PdfService data2PdfService, JasperReport jasperReport
+                            Data2PdfService data2PdfService, JasperReport jasperReport,
+                            HttpServletResponse response
                             ) throws Exception{
         //创建报表参数Map对象，需要传入报表的参数，均需要通过这个map对象传递
         Map<String, Object> mapParam = new HashMap<String, Object>();
@@ -149,7 +150,11 @@ public class CreatePdfUtil {
         mapParam.put("reportPath", System.getProperty("user.dir") + "/reportfile/" + strReportPath);
 
         // 生成pdf格式的报表文件
-        data2PdfService.CreatePdf(mapParam, jasperReport, strOutputPathFileName);
+        if(response == null){
+            data2PdfService.createPdf(mapParam, jasperReport, strOutputPathFileName);
+        }else{
+            data2PdfService.getPdf(mapParam, jasperReport, response);
+        }
 
         if(inputStream != null){
             inputStream.close();
