@@ -8,6 +8,9 @@ import net.sf.jasperreports.engine.JasperReport;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Base64;
 import java.util.Map;
@@ -58,6 +61,43 @@ public class Data2PdfServiceImpl implements Data2PdfService {
         byte[] bytes = JasperExportManager.exportReportToPdf(jasperPrint);
 
         return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    /**
+     * 将传入的JSON对象，转换为HTML文件流，返回到Response中。
+     * @param parameters 输入的参数，包括JSON数据对象
+     * @param jasperReport 报表文件对象
+     * @param response Http响应对象
+     * @param outPutFile html临时文件（路径+文件名）
+     */
+    public void getHtml(Map<String, Object> parameters, JasperReport jasperReport,
+                       HttpServletResponse response, String outPutFile) throws Exception {
+        response.setContentType("text/html");
+
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters);
+        JasperExportManager.exportReportToHtmlFile(jasperPrint, outPutFile);
+
+        File fileHtml = new File(outPutFile);
+        if(fileHtml.exists()){
+            OutputStream os = response.getOutputStream();
+
+            InputStream is = new FileInputStream(fileHtml);
+            byte[] bytes = new byte[2048];
+            int intLength;
+            while ((intLength = is.read(bytes)) != -1) {
+                os.write(bytes, 0, intLength);
+            }
+
+            if(is != null){
+                is.close();
+            }
+            if(os != null){
+                os.close();
+            }
+
+            fileHtml.delete();
+        }
+
     }
 
 }

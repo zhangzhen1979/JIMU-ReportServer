@@ -30,4 +30,15 @@ public interface Data2PdfService {
      * @param jasperReport 报表文件对象
      */
     String getBase64(Map<String, Object> parameters, JasperReport jasperReport) throws Exception;
+
+    /**
+     * 将传入的JSON对象，转换为HTML文件流，返回到Response中。
+     * @param parameters 输入的参数，包括JSON数据对象
+     * @param jasperReport 报表文件对象
+     * @param response Http响应对象
+     * @param outPutFile html临时文件（路径+文件名）
+     */
+    void getHtml(Map<String, Object> parameters, JasperReport jasperReport,
+                 HttpServletResponse response, String outPutFile) throws Exception;
+
 }

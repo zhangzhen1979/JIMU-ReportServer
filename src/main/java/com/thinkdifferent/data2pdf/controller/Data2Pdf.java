@@ -32,6 +32,7 @@ public class Data2Pdf {
     /**
      * 【stream】将数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
      * @param jsonInput 传入的JSON参数
+     * @param response HTTP响应对象
      *  生成单个PDF报表文件JSON示例
      *{
      * 	"reportFile":"dah/jb-4cm",
@@ -75,7 +76,24 @@ public class Data2Pdf {
 
         try {
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            createPdfUtil.data2PDF("stream", data2PdfService, jsonInput, response);
+            createPdfUtil.json2Report("stream", data2PdfService, jsonInput, response);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 【html】将数据生成HTML报表文件，返回Response。
+     * @param jsonInput 传入的JSON参数
+     * @param response HTTP响应对象
+     */
+    @RequestMapping(value = "/getHtml", method = RequestMethod.POST)
+    public void get2Html(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+
+        try {
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            createPdfUtil.json2Report("html", data2PdfService, jsonInput, response);
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -186,7 +204,7 @@ public class Data2Pdf {
                 strOutputType = "multiWriteBack";
             }
 
-            jsonReturn = createPdfUtil.data2PDF(strOutputType, data2PdfService, jsonInput, null);
+            jsonReturn = createPdfUtil.json2Report(strOutputType, data2PdfService, jsonInput, null);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){
@@ -253,7 +271,7 @@ public class Data2Pdf {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            JSONObject jsonReturn = createPdfUtil.data2PDF("singleBase64",
+            JSONObject jsonReturn = createPdfUtil.json2Report("singleBase64",
                     data2PdfService, jsonInput, null);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
@@ -283,7 +301,7 @@ public class Data2Pdf {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.data2PDF("multiBase64",
+            jsonReturn = createPdfUtil.json2Report("multiBase64",
                     data2PdfService, jsonInput, null);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){

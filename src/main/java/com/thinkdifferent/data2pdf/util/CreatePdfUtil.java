@@ -22,7 +22,7 @@ import java.util.Map;
 public class CreatePdfUtil {
 
     /**
-     * JSON数据生成PDF报表
+     * JSON数据生成报表
      * @param strOutputType 报表输出方式：流(stream）、
      *      单文件回写（singleWriteBack）、多文件回写（multiWriteBack）、
      *      单文件Base64（singleBase64）、多文件Base64（multiBase64）
@@ -32,9 +32,9 @@ public class CreatePdfUtil {
      * @return
      * @throws Exception
      */
-    public JSONObject data2PDF(String strOutputType,
-                               Data2PdfService data2PdfService, JSONObject jsonInput,
-                               HttpServletResponse response)
+    public JSONObject json2Report(String strOutputType,
+                                  Data2PdfService data2PdfService, JSONObject jsonInput,
+                                  HttpServletResponse response)
             throws Exception{
         JSONObject jsonReturn = new JSONObject();
         jsonReturn.put("flag", "error" );
@@ -70,9 +70,9 @@ public class CreatePdfUtil {
             strFileNameKey = jsonInput.getString("fileNameKey");
         }
         // 或者，生成一个PDF文件：获取PDF文件名
-        String strPdfFileName = null;
+        String strOutFileName = null;
         if(jsonInput.has("fileName")){
-            strPdfFileName = jsonInput.getString("fileName");
+            strOutFileName = jsonInput.getString("fileName");
         }
 
         JSONArray jaData = jsonInput.getJSONArray("data");
@@ -100,21 +100,31 @@ public class CreatePdfUtil {
         String strBase64 = "";
         JSONArray jaBase64 = new JSONArray();
 
-        if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+        if("html".equalsIgnoreCase(reportParamEntity.getOutputType())){
+            // 生成一个HTML报表
+            String strOutputPathFileName = Data2PDFConfig.outPutPath+strOutFileName + ".html";
+
+            reportParamEntity.setOutputPathFileName(strOutputPathFileName);
+            reportParamEntity.setJaData(jaData);
+
+            createReport(reportParamEntity);
+        }else if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleWriteBack".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
             // 生成一个PDF报表；否则生成多个PDF报表文件
-            strOutputFileNames = strPdfFileName + ".pdf";
+            strOutputFileNames = strOutFileName + ".pdf";
             String strOutputPathFileName = strOutPutPath+strOutputFileNames;
 
             reportParamEntity.setOutputPathFileName(strOutputPathFileName);
             reportParamEntity.setJaData(jaData);
 
-            strBase64 = save2Pdf(reportParamEntity);
-            JSONObject joBase64 = new JSONObject();
-            joBase64.put("value", strBase64);
+            strBase64 = createReport(reportParamEntity);
+            if(strBase64 !=null && !"".equals(strBase64)){
+                JSONObject joBase64 = new JSONObject();
+                joBase64.put("value", strBase64);
 
-            jaBase64.add(joBase64);
+                jaBase64.add(joBase64);
+            }
         }else{
             // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
             for(int i=0;i<jaData.size();i++){
@@ -126,11 +136,13 @@ public class CreatePdfUtil {
                 reportParamEntity.setOutputPathFileName(strOutputPathFileName);
                 reportParamEntity.setJoData(jaData.getJSONObject(i));
 
-                strBase64 = save2Pdf(reportParamEntity);
-                JSONObject joBase64 = new JSONObject();
-                joBase64.put("value", strBase64);
+                strBase64 = createReport(reportParamEntity);
+                if(strBase64 !=null && !"".equals(strBase64)) {
+                    JSONObject joBase64 = new JSONObject();
+                    joBase64.put("value", strBase64);
 
-                jaBase64.add(joBase64);
+                    jaBase64.add(joBase64);
+                }
 
                 strOutputFileNames = strOutputFileNames + strOutputPathFileName + ";";
             }
@@ -143,7 +155,9 @@ public class CreatePdfUtil {
         jsonReturn.put("flag", "success" );
         jsonReturn.put("message", "Create Pdf Report file Success." );
         jsonReturn.put("file", strOutputFileNames);
-        jsonReturn.put("base64", jaBase64);
+        if(strBase64 !=null && !"".equals(strBase64)) {
+            jsonReturn.put("base64", jaBase64);
+        }
 
         // manually cleaning up
         reportParamEntity.getJrFileVirtualizer().cleanup();
@@ -157,7 +171,7 @@ public class CreatePdfUtil {
      * @return 返回的Base64字符串
      * @throws Exception
      */
-    private String save2Pdf(ReportParamEntity reportParamEntity) throws Exception{
+    private String createReport(ReportParamEntity reportParamEntity) throws Exception{
         String strBase64 = null;
 
         //创建报表参数Map对象，需要传入报表的参数，均需要通过这个map对象传递
@@ -166,7 +180,8 @@ public class CreatePdfUtil {
         mapParam.put(JRParameter.REPORT_VIRTUALIZER, reportParamEntity.getJrFileVirtualizer());
         // 将输入的JSON参数转码为UTF-8，并转换为输入流（避免文字产生乱码）
         InputStream inputStream;
-        if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+        if("html".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+                "stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleWriteBack".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
             inputStream = new ByteArrayInputStream(reportParamEntity.getJaData()
@@ -185,8 +200,12 @@ public class CreatePdfUtil {
         }
         mapParam.put("reportPath", System.getProperty("user.dir") + "/reportfile/" + strReportPath);
 
+        if("html".equalsIgnoreCase(reportParamEntity.getOutputType())) {
+            reportParamEntity.getData2PdfServicep().
+                    getHtml(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse(),
+                            reportParamEntity.getOutputPathFileName());
         // 生成pdf格式的报表文件
-        if("stream".equalsIgnoreCase(reportParamEntity.getOutputType())){
+        }else if("stream".equalsIgnoreCase(reportParamEntity.getOutputType())){
             reportParamEntity.getData2PdfServicep().
                     getPdf(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse());
         }else if("singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType()) ||

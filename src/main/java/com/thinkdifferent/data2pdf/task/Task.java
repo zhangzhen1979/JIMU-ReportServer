@@ -44,7 +44,7 @@ public class Task implements RabbitTemplate.ConfirmCallback {
             }
 
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.data2PDF(strOutputType, data2PdfService, jsonInput, null);
+            jsonReturn = createPdfUtil.json2Report(strOutputType, data2PdfService, jsonInput, null);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){
