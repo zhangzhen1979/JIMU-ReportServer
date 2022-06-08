@@ -530,11 +530,8 @@ public class Data2Pdf {
 
         try{
             Connection conn = dataSource.getConnection();
-
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-
             ReportParamEntity createReportParamEntity = new ReportParamEntity();
-
             setDbParams(createReportParamEntity, jsonInput, conn);
 
             String strOutputType;

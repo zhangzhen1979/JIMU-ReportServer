@@ -201,16 +201,9 @@ public class CreatePdfUtil {
             // 以数据流的形式，填充报表数据源
             mapParam.put("JSON_INPUT_STREAM", inputStream);
         }else{
-            // 数据库连接方式获取数据
-            mapParam.put("table", reportParamEntity.getJaTableParams()
-                    .getJSONObject(intIndex)
-                    .getString("table"));
-            mapParam.put("where", " where " + reportParamEntity.getJaTableParams()
-                    .getJSONObject(intIndex)
-                    .getString("where"));
-            mapParam.put("orderBy", " order by " + reportParamEntity.getJaTableParams()
-                    .getJSONObject(intIndex)
-                    .getString("orderBy"));
+            // 数据库连接方式，获取数据
+            mapParam.putAll(reportParamEntity.getJaTableParams()
+                    .getJSONObject(intIndex));
         }
 
         // 设定参数，报表模板的路径（如果报表中有子报表、图片，会用到这个路径参数）
