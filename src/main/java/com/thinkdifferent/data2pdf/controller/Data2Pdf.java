@@ -15,11 +15,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,9 +30,62 @@ public class Data2Pdf {
     private RabbitMQService rabbitMQService;
 
     /**
+     * 【stream】将数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
+     * @param jsonInput 传入的JSON参数
+     *  生成单个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dah/jb-4cm",
+     * 	"fileName":"dahjb",
+     * 	"data":[
+     * 		{
+     * 			"year": "2022",
+     * 			"fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0001",
+     * 		    "barcode":"1234567891"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0002",
+     * 		    "barcode":"1234567892"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"10年",
+     * 		    "box_no":"0003",
+     * 		    "barcode":"1234567893"
+     * 		},
+     * 		{
+     * 		    "year": "2022",
+     * 		    "fonds": "维森集团",
+     * 		    "retention":"30年",
+     * 		    "box_no":"0004",
+     * 		    "barcode":"1234567894"
+     * 		}
+     *   ]
+     * }
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getPdf", method = RequestMethod.POST)
+    public void get2PDF(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+
+        try {
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            createPdfUtil.data2PDF("stream", data2PdfService, jsonInput, response);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
      * 将数据生成PDF报表文件
      * @param jsonInput 传入的JSON参数
-     *  生成多个PDF报表文件JSON示例
+     *  【multiWriteBack】生成多个PDF报表文件JSON示例
      *{
      * 	"reportFile":"jzpz/jzpz",
      * 	"fileNameKey":"voucher_code",
@@ -76,7 +124,7 @@ public class Data2Pdf {
      * 	]
      * }
      *
-     *  生成单个PDF报表文件JSON示例
+     *  【singleWriteBack】生成单个PDF报表文件JSON示例
      *{
      * 	"reportFile":"dah/jb-4cm",
      * 	"fileName":"dahjb",
@@ -130,7 +178,15 @@ public class Data2Pdf {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput, null);
+
+            String strOutputType;
+            if(jsonInput.has("fileName") && jsonInput.getString("fileName")!=null){
+                strOutputType = "singleWriteBack";
+            }else {
+                strOutputType = "multiWriteBack";
+            }
+
+            jsonReturn = createPdfUtil.data2PDF(strOutputType, data2PdfService, jsonInput, null);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){
@@ -153,60 +209,7 @@ public class Data2Pdf {
     }
 
     /**
-     * 将数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
-     * @param jsonInput 传入的JSON参数
-     *  生成单个PDF报表文件JSON示例
-     *{
-     * 	"reportFile":"dah/jb-4cm",
-     * 	"fileName":"dahjb",
-     * 	"data":[
-     * 		{
-     * 			"year": "2022",
-     * 			"fonds": "维森集团",
-     * 		    "retention":"30年",
-     * 		    "box_no":"0001",
-     * 		    "barcode":"1234567891"
-     * 		},
-     * 		{
-     * 		    "year": "2022",
-     * 		    "fonds": "维森集团",
-     * 		    "retention":"10年",
-     * 		    "box_no":"0002",
-     * 		    "barcode":"1234567892"
-     * 		},
-     * 		{
-     * 		    "year": "2022",
-     * 		    "fonds": "维森集团",
-     * 		    "retention":"10年",
-     * 		    "box_no":"0003",
-     * 		    "barcode":"1234567893"
-     * 		},
-     * 		{
-     * 		    "year": "2022",
-     * 		    "fonds": "维森集团",
-     * 		    "retention":"30年",
-     * 		    "box_no":"0004",
-     * 		    "barcode":"1234567894"
-     * 		}
-     *   ]
-     * }
-     *
-     * @return
-     */
-    @RequestMapping(value = "/getPdf", method = RequestMethod.POST)
-    public void get2PDF(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
-
-        try {
-            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            createPdfUtil.data2PDF(data2PdfService, jsonInput, response);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * 将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
+     * 【singleBase64】将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
      * @param jsonInput 传入的JSON参数
      *{
      * 	"reportFile":"dah/jb-4cm",
@@ -250,25 +253,13 @@ public class Data2Pdf {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            JSONObject jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput, null);
+            JSONObject jsonReturn = createPdfUtil.data2PDF("singleBase64",
+                    data2PdfService, jsonInput, null);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
-                String strPdfFilePathName = jsonReturn.getString("file");
-                if(strPdfFilePathName != null){
-                    String[] strFiles = strPdfFilePathName.split(";");
-                    strPdfFilePathName = strFiles[0];
-                }
-
-                File filePDF = new File(strPdfFilePathName);
-                if(filePDF.exists()){
-                    try {
-                        byte[] b = Files.readAllBytes(Paths.get(strPdfFilePathName));
-                        // 转换为byte后，PDF文件即可删除
-                        filePDF.delete();
-                        return Base64.getEncoder().encodeToString(b);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                JSONArray jaBase64 = jsonReturn.getJSONArray("base64");
+                if(jaBase64 != null){
+                    return jaBase64.getJSONObject(0).getString("value");
                 }
             }
 
@@ -277,11 +268,11 @@ public class Data2Pdf {
         }
 
         // 返回处理完毕消息
-        return null;
+        return "error";
     }
 
     /**
-     * 将数据生成PDF报表文件，返回Base64之后的文件内容，可供页面直接显示。
+     * 【multiBase64】将数据生成PDF报表文件，返回Base64之后的文件内容，可供页面直接显示。
      * 此接口支持返回多个PDF文件的Base64值。
      * @param jsonInput 传入的JSON参数。内容与“data2pdf2base64”接口相同，data中可以有多个JSON对象。
      * @return
@@ -292,7 +283,8 @@ public class Data2Pdf {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput, null);
+            jsonReturn = createPdfUtil.data2PDF("multiBase64",
+                    data2PdfService, jsonInput, null);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
                 JSONArray jsonArrayPDF = new JSONArray();
@@ -302,27 +294,19 @@ public class Data2Pdf {
                 if(strPdfFilePathName != null){
                     String[] strFiles = strPdfFilePathName.split(";");
                     for(int i=0; i<strFiles.length; i++){
-                        File filePDF = new File(strFiles[i]);
-                        if(filePDF.exists()){
-                            try {
-                                byte[] b = Files.readAllBytes(Paths.get(strFiles[i]));
-                                JSONObject jsonObjectPDF = new JSONObject();
-                                jsonObjectPDF.put("filename", filePDF.getName());
-                                jsonObjectPDF.put("base64", Base64.getEncoder().encodeToString(b));
-                                jsonArrayPDF.add(jsonObjectPDF);
-                                // 转换为byte后，PDF文件即可删除
-                                filePDF.delete();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        JSONObject jsonObjectPDF = new JSONObject();
+                        jsonObjectPDF.put("filename", strFiles[i]);
 
+                        JSONArray jaBase64 = jsonReturn.getJSONArray("base64");
+                        if(jaBase64 != null){
+                            jsonObjectPDF.put("base64",
+                                    jaBase64.getJSONObject(0).getString("value"));
+                        }
+                        jsonArrayPDF.add(jsonObjectPDF);
                     }
 
                     jsonReturn.put("base64", jsonArrayPDF);
                 }
-
-
             }
         }catch (Exception e) {
             e.printStackTrace();

@@ -36,8 +36,15 @@ public class Task implements RabbitTemplate.ConfirmCallback {
         jsonReturn.put("message", "Create Pdf file Error" );
 
         try{
+            String strOutputType;
+            if(jsonInput.has("fileName") && jsonInput.getString("fileName")!=null){
+                strOutputType = "singleWriteBack";
+            }else {
+                strOutputType = "multiWriteBack";
+            }
+
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.data2PDF(data2PdfService, jsonInput, null);
+            jsonReturn = createPdfUtil.data2PDF(strOutputType, data2PdfService, jsonInput, null);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
+import java.util.Base64;
 import java.util.Map;
 
 @Service
@@ -44,6 +45,19 @@ public class Data2PdfServiceImpl implements Data2PdfService {
             os.close();
         }
 
+    }
+
+    /**
+     * 将传入的JSON对象，转换为PDF文件，转换为Base64字符串。
+     * @param parameters 输入的参数，包括JSON数据对象
+     * @param jasperReport 报表文件对象
+     */
+    public String getBase64(Map<String, Object> parameters, JasperReport jasperReport) throws Exception {
+
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters);
+        byte[] bytes = JasperExportManager.exportReportToPdf(jasperPrint);
+
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
 }
