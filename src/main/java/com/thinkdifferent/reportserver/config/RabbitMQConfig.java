@@ -1,4 +1,4 @@
-package com.thinkdifferent.data2pdf.config;
+package com.thinkdifferent.reportserver.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

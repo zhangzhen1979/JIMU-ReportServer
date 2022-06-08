@@ -12,7 +12,7 @@ server:
 spring:
   application:
     # 应用名称。如果启用nacos，此值必填
-    name: com.thinkdifferent.data2pdf
+    name: com.thinkdifferent.reportserver
 
   # 如果不使用数据库连接（不查数据库记录生成报表），则配置此项；
   # 如果使用数据库，则注释此项，并配置datasource中的参数
@@ -135,6 +135,5 @@ ThreadPool:
   AwaitTerminationSeconds: 60
 
 
-convert:
-  data2pdf:
-    outPutPath: D:/data2pdf/pdf/
+reportserver:
+  outPutPath: D:/data2pdf/pdf/

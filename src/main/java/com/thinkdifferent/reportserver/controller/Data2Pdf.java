@@ -1,10 +1,10 @@
-package com.thinkdifferent.data2pdf.controller;
+package com.thinkdifferent.reportserver.controller;
 
-import com.thinkdifferent.data2pdf.entity.ReportParamEntity;
-import com.thinkdifferent.data2pdf.service.Data2PdfService;
-import com.thinkdifferent.data2pdf.service.RabbitMQService;
-import com.thinkdifferent.data2pdf.util.CreatePdfUtil;
-import com.thinkdifferent.data2pdf.util.WriteBackUtil;
+import com.thinkdifferent.reportserver.entity.ReportParamEntity;
+import com.thinkdifferent.reportserver.service.Data2PdfService;
+import com.thinkdifferent.reportserver.service.RabbitMQService;
+import com.thinkdifferent.reportserver.util.CreatePdfUtil;
+import com.thinkdifferent.reportserver.util.WriteBackUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
@@ -377,7 +377,7 @@ public class Data2Pdf {
 
     /**
      * 接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件
-     * @param jsonInput 传入的JSON参数。与接口“data2pdf”传入的内容相同
+     * @param jsonInput 传入的JSON参数。与接口“reportserver”传入的内容相同
      * @return
      */
     @ApiOperation("接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件")

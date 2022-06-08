@@ -1,4 +1,4 @@
-package com.thinkdifferent.data2pdf.util;
+package com.thinkdifferent.reportserver.util;
 
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.extra.ftp.Ftp;

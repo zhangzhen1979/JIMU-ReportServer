@@ -1,7 +1,7 @@
-package com.thinkdifferent.data2pdf.service.impl;
+package com.thinkdifferent.reportserver.service.impl;
 
-import com.thinkdifferent.data2pdf.config.RabbitMQConfig;
-import com.thinkdifferent.data2pdf.service.RabbitMQService;
+import com.thinkdifferent.reportserver.config.RabbitMQConfig;
+import com.thinkdifferent.reportserver.service.RabbitMQService;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

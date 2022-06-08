@@ -1,6 +1,6 @@
-package com.thinkdifferent.data2pdf.entity;
+package com.thinkdifferent.reportserver.entity;
 
-import com.thinkdifferent.data2pdf.service.Data2PdfService;
+import com.thinkdifferent.reportserver.service.Data2PdfService;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.fill.JRFileVirtualizer;
 import net.sf.json.JSONArray;

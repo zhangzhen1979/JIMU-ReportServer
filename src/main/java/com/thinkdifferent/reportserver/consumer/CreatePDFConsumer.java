@@ -1,8 +1,8 @@
-package com.thinkdifferent.data2pdf.consumer;
+package com.thinkdifferent.reportserver.consumer;
 
-import com.thinkdifferent.data2pdf.config.RabbitMQConfig;
-import com.thinkdifferent.data2pdf.service.Data2PdfService;
-import com.thinkdifferent.data2pdf.task.Task;
+import com.thinkdifferent.reportserver.config.RabbitMQConfig;
+import com.thinkdifferent.reportserver.service.Data2PdfService;
+import com.thinkdifferent.reportserver.task.Task;
 import net.sf.json.JSONObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;

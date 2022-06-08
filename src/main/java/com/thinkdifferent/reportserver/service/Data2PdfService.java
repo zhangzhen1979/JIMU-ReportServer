@@ -1,4 +1,4 @@
-package com.thinkdifferent.data2pdf.service;
+package com.thinkdifferent.reportserver.service;
 
 import net.sf.jasperreports.engine.JasperReport;
 

@@ -1,9 +1,9 @@
-package com.thinkdifferent.data2pdf.task;
+package com.thinkdifferent.reportserver.task;
 
-import com.thinkdifferent.data2pdf.entity.ReportParamEntity;
-import com.thinkdifferent.data2pdf.service.Data2PdfService;
-import com.thinkdifferent.data2pdf.util.CreatePdfUtil;
-import com.thinkdifferent.data2pdf.util.WriteBackUtil;
+import com.thinkdifferent.reportserver.entity.ReportParamEntity;
+import com.thinkdifferent.reportserver.service.Data2PdfService;
+import com.thinkdifferent.reportserver.util.CreatePdfUtil;
+import com.thinkdifferent.reportserver.util.WriteBackUtil;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

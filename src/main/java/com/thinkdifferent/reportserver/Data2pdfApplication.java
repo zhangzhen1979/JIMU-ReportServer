@@ -1,4 +1,4 @@
-package com.thinkdifferent.data2pdf;
+package com.thinkdifferent.reportserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

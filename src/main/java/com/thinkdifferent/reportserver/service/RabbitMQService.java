@@ -1,8 +1,6 @@
-package com.thinkdifferent.data2pdf.service;
+package com.thinkdifferent.reportserver.service;
 
 import net.sf.json.JSONObject;
-
-import java.util.Map;
 
 public interface RabbitMQService {
     /**

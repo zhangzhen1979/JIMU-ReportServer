@@ -1,6 +1,6 @@
-package com.thinkdifferent.data2pdf.service.impl;
+package com.thinkdifferent.reportserver.service.impl;
 
-import com.thinkdifferent.data2pdf.service.Data2PdfService;
+import com.thinkdifferent.reportserver.service.Data2PdfService;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;

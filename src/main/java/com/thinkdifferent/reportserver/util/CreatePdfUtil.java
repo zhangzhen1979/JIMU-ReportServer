@@ -1,7 +1,7 @@
-package com.thinkdifferent.data2pdf.util;
+package com.thinkdifferent.reportserver.util;
 
-import com.thinkdifferent.data2pdf.config.Data2PDFConfig;
-import com.thinkdifferent.data2pdf.entity.ReportParamEntity;
+import com.thinkdifferent.reportserver.config.ReportServerConfig;
+import com.thinkdifferent.reportserver.entity.ReportParamEntity;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.fill.JRFileVirtualizer;
@@ -43,7 +43,7 @@ public class CreatePdfUtil {
 
         String strWriteBackType = "path";
         // 本地服务报表输出路径
-        String strOutPutPath = Data2PDFConfig.outPutPath;
+        String strOutPutPath = ReportServerConfig.outPutPath;
         if(jsonReturn.get("writeBackType")!=null){
             strWriteBackType = String.valueOf(jsonReturn.get("writeBackType"));
 
@@ -101,7 +101,7 @@ public class CreatePdfUtil {
 
         if("html".equalsIgnoreCase(reportParamEntity.getOutputType())){
             // 生成一个HTML报表
-            String strOutputPathFileName = Data2PDFConfig.outPutPath+strOutFileName + ".html";
+            String strOutputPathFileName = ReportServerConfig.outPutPath+strOutFileName + ".html";
 
             reportParamEntity.setOutputPathFileName(strOutputPathFileName);
             if(jaData !=null && !jaData.isEmpty()){
