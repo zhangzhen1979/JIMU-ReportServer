@@ -14,6 +14,11 @@ spring:
     # 应用名称。如果启用nacos，此值必填
     name: com.thinkdifferent.data2pdf
 
+  # 如果不使用数据库连接（不查数据库记录生成报表），则配置此项；
+  # 如果使用数据库，则注释此项，并配置datasource中的参数
+  autoconfigure:
+    exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
+
   # datasource（Druid用）
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
