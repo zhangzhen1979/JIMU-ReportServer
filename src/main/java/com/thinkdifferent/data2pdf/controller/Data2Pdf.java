@@ -1,5 +1,6 @@
 package com.thinkdifferent.data2pdf.controller;
 
+import com.thinkdifferent.data2pdf.entity.ReportParamEntity;
 import com.thinkdifferent.data2pdf.service.Data2PdfService;
 import com.thinkdifferent.data2pdf.service.RabbitMQService;
 import com.thinkdifferent.data2pdf.util.CreatePdfUtil;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +33,7 @@ public class Data2Pdf {
     private RabbitMQService rabbitMQService;
 
     /**
-     * 【stream】将数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
+     * 【stream】将JSON数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
      * @param jsonInput 传入的JSON参数
      * @param response HTTP响应对象
      *  生成单个PDF报表文件JSON示例
@@ -71,12 +74,20 @@ public class Data2Pdf {
      *
      * @return
      */
-    @RequestMapping(value = "/getPdf", method = RequestMethod.POST)
-    public void get2PDF(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+    @RequestMapping(value = "/getJson2Pdf", method = RequestMethod.POST)
+    public void getJson2Pdf(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
 
         try {
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            createPdfUtil.json2Report("stream", data2PdfService, jsonInput, response);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType("stream");
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+            createReportParamEntity.setResponse(response);
+
+            createPdfUtil.createReportFromData(createReportParamEntity);
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,12 +99,20 @@ public class Data2Pdf {
      * @param jsonInput 传入的JSON参数
      * @param response HTTP响应对象
      */
-    @RequestMapping(value = "/getHtml", method = RequestMethod.POST)
-    public void get2Html(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+    @RequestMapping(value = "/getJson2Html", method = RequestMethod.POST)
+    public void getJson2Html(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
 
         try {
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            createPdfUtil.json2Report("html", data2PdfService, jsonInput, response);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType("html");
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+            createReportParamEntity.setResponse(response);
+
+            createPdfUtil.createReportFromData(createReportParamEntity);
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -190,8 +209,8 @@ public class Data2Pdf {
      *
      * @return
      */
-    @RequestMapping(value = "/json2pdf", method = RequestMethod.POST)
-    public JSONObject json2PDF(@RequestBody JSONObject jsonInput) {
+    @RequestMapping(value = "/getJson2PdfFile", method = RequestMethod.POST)
+    public JSONObject getJson2PdfFile(@RequestBody JSONObject jsonInput) {
         JSONObject jsonReturn = new JSONObject();
 
         try{
@@ -204,7 +223,14 @@ public class Data2Pdf {
                 strOutputType = "multiWriteBack";
             }
 
-            jsonReturn = createPdfUtil.json2Report(strOutputType, data2PdfService, jsonInput, null);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType(strOutputType);
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+
+            jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){
@@ -266,13 +292,19 @@ public class Data2Pdf {
      *
      * @return
      */
-    @RequestMapping(value = "/json2pdf2base64", method = RequestMethod.POST)
-    public String json2PDF2Base64(@RequestBody JSONObject jsonInput) {
+    @RequestMapping(value = "/getJson2PdfBase64", method = RequestMethod.POST)
+    public String getJson2PdfBase64(@RequestBody JSONObject jsonInput) {
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            JSONObject jsonReturn = createPdfUtil.json2Report("singleBase64",
-                    data2PdfService, jsonInput, null);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType("singleBase64");
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+
+            JSONObject jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
                 JSONArray jaBase64 = jsonReturn.getJSONArray("base64");
@@ -295,14 +327,20 @@ public class Data2Pdf {
      * @param jsonInput 传入的JSON参数。内容与“data2pdf2base64”接口相同，data中可以有多个JSON对象。
      * @return
      */
-    @RequestMapping(value = "/json2pdfs2base64", method = RequestMethod.POST)
-    public JSONObject json2PDFs2Base64(@RequestBody JSONObject jsonInput) {
+    @RequestMapping(value = "/getJson2PdfsBase64", method = RequestMethod.POST)
+    public JSONObject getJson2PdfsBase64(@RequestBody JSONObject jsonInput) {
         JSONObject jsonReturn = new JSONObject();
 
         try{
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.json2Report("multiBase64",
-                    data2PdfService, jsonInput, null);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType("multiBase64");
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+
+            jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
 
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
                 JSONArray jsonArrayPDF = new JSONArray();
@@ -343,8 +381,8 @@ public class Data2Pdf {
      * @return
      */
     @ApiOperation("接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件")
-    @RequestMapping(value = "/json2mq", method = RequestMethod.POST)
-    public Map<String, String> data2MQ(@RequestBody JSONObject jsonInput) {
+    @RequestMapping(value = "/putJson2Mq", method = RequestMethod.POST)
+    public Map<String, String> putJson2Mq(@RequestBody JSONObject jsonInput) {
         Map<String, String> mapReturn = new HashMap<>();
         mapReturn.put("flag", "success" );
         mapReturn.put("message", "Set JSON Data to MQ Success" );
@@ -353,6 +391,294 @@ public class Data2Pdf {
 
         return mapReturn;
     }
+
+
+
+    @Autowired
+    private DataSource dataSource;
+
+    private void setDbParams(ReportParamEntity createReportParamEntity,
+                             JSONObject jsonInput, Connection conn){
+        createReportParamEntity.setDataSource("db");
+        createReportParamEntity.setData2PdfService(data2PdfService);
+        createReportParamEntity.setJoData(jsonInput);
+
+        createReportParamEntity.setConn(conn);
+        if(jsonInput != null && !jsonInput.isEmpty()){
+            createReportParamEntity.setJaTableParams(jsonInput.getJSONArray("data"));
+        }
+
+    }
+
+    /**
+     * 【stream】将JSON数据生成PDF报表文件，返回Response。此接口只能处理一个PDF文件！
+     * @param jsonInput 传入的JSON参数
+     * @param response HTTP响应对象
+     *  生成单个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dbReport/arclist",
+     * 	"fileName":"arclist",
+     * 	"data":[
+     *       {
+     * 		    "table": "arclist",
+     * 		    "where": "1=1",
+     * 		    "orderBy": "id",
+     *        }
+     * 	]
+     * }
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getDb2Pdf", method = RequestMethod.POST)
+    public void getDb2Pdf(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+
+        try {
+            Connection conn = dataSource.getConnection();
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            setDbParams(createReportParamEntity, jsonInput, conn);
+            createReportParamEntity.setOutputType("stream");
+            createReportParamEntity.setResponse(response);
+
+            createPdfUtil.createReportFromData(createReportParamEntity);
+            conn.close();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 【html】将数据生成HTML报表文件，返回Response。
+     * @param jsonInput 传入的JSON参数
+     * @param response HTTP响应对象
+     */
+    @RequestMapping(value = "/getDb2Html", method = RequestMethod.POST)
+    public void getDb2Html(@RequestBody JSONObject jsonInput, HttpServletResponse response) {
+
+        try {
+            Connection conn = dataSource.getConnection();
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            setDbParams(createReportParamEntity, jsonInput, conn);
+            createReportParamEntity.setOutputType("html");
+            createReportParamEntity.setResponse(response);
+
+            createPdfUtil.createReportFromData(createReportParamEntity);
+            conn.close();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 将数据生成PDF报表文件
+     * @param jsonInput 传入的JSON参数
+     *  【multiWriteBack】生成多个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dbReport/arclist",
+     * 	"fileNameKey":"voucher_code",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     *       {
+     * 		    "voucher_code": "20210507SJFBX1234567",
+     * 		    "table": "arclist",
+     * 		    "where": "1=1",
+     * 		    "orderBy": "id",
+     *        }
+     * 	]
+     * }
+     *
+     *  【singleWriteBack】生成单个PDF报表文件JSON示例
+     *{
+     * 	"reportFile":"dbReport/arclist",
+     * 	"fileName":"arclist",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     * 		{
+     * 		    "table": "arclist",
+     * 		    "where": "1=1",
+     * 		    "orderBy": "id"
+     * 		}
+     *   ]
+     * }
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getDb2PdfFile", method = RequestMethod.POST)
+    public JSONObject getDb2PdfFile(@RequestBody JSONObject jsonInput) {
+        JSONObject jsonReturn = new JSONObject();
+
+        try{
+            Connection conn = dataSource.getConnection();
+
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+
+            setDbParams(createReportParamEntity, jsonInput, conn);
+
+            String strOutputType;
+            if(jsonInput.has("fileName") && jsonInput.getString("fileName")!=null){
+                strOutputType = "singleWriteBack";
+            }else {
+                strOutputType = "multiWriteBack";
+            }
+            createReportParamEntity.setOutputType(strOutputType);
+
+            jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
+
+            conn.close();
+
+            boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
+            if(blnSuccess){
+                jsonReturn.put("flag", "success" );
+                jsonReturn.put("message", jsonReturn.getString("message") + " PDF file write back success. API call back success." );
+            }else{
+                jsonReturn.put("flag", "error" );
+                jsonReturn.put("message", jsonReturn.getString("message") + " ,OR PDF file write back error. OR API call back error." );
+            }
+
+        }catch (Exception e) {
+            e.printStackTrace();
+
+            jsonReturn.put("flag", "exception" );
+            jsonReturn.put("message", e.getMessage() );
+        }
+
+        // 返回处理完毕消息
+        return jsonReturn;
+    }
+
+    /**
+     * 【singleBase64】将数据生成PDF报表文件，返回base64之后的文件内容，可供页面直接显示。此接口只能处理一个PDF文件！
+     * @param jsonInput 传入的JSON参数
+     *{
+     * 	"reportFile":"dbReport/arclist",
+     * 	"fileName":"arclist",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     * 		{
+     * 		    "table": "arclist",
+     * 		    "where": "1=1",
+     * 		    "orderBy": "id"
+     * 		}
+     *   ]
+     * }
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getDb2PdfBase64", method = RequestMethod.POST)
+    public String getDb2PdfBase64(@RequestBody JSONObject jsonInput) {
+
+        try{
+            Connection conn = dataSource.getConnection();
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            setDbParams(createReportParamEntity, jsonInput, conn);
+            createReportParamEntity.setOutputType("singleBase64");
+
+            JSONObject jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
+            conn.close();
+
+            if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
+                JSONArray jaBase64 = jsonReturn.getJSONArray("base64");
+                if(jaBase64 != null){
+                    return jaBase64.getJSONObject(0).getString("value");
+                }
+            }
+
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 返回处理完毕消息
+        return "error";
+    }
+
+    /**
+     * 【multiBase64】将数据生成PDF报表文件，返回Base64之后的文件内容，可供页面直接显示。
+     * 此接口支持返回多个PDF文件的Base64值。
+     * @param jsonInput 传入的JSON参数。内容与“data2pdf2base64”接口相同，data中可以有多个JSON对象。
+     * @return
+     */
+    @RequestMapping(value = "/getDb2PdfsBase64", method = RequestMethod.POST)
+    public JSONObject getDb2PdfsBase64(@RequestBody JSONObject jsonInput) {
+        JSONObject jsonReturn = new JSONObject();
+
+        try{
+            Connection conn = dataSource.getConnection();
+            CreatePdfUtil createPdfUtil = new CreatePdfUtil();
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            setDbParams(createReportParamEntity, jsonInput, conn);
+            createReportParamEntity.setOutputType("multiBase64");
+
+            jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
+            conn.close();
+
+            if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
+                JSONArray jsonArrayPDF = new JSONArray();
+
+                String strPdfFilePathName = jsonReturn.getString("file");
+
+                if(strPdfFilePathName != null){
+                    String[] strFiles = strPdfFilePathName.split(";");
+                    for(int i=0; i<strFiles.length; i++){
+                        JSONObject jsonObjectPDF = new JSONObject();
+                        jsonObjectPDF.put("filename", strFiles[i]);
+
+                        JSONArray jaBase64 = jsonReturn.getJSONArray("base64");
+                        if(jaBase64 != null){
+                            jsonObjectPDF.put("base64",
+                                    jaBase64.getJSONObject(0).getString("value"));
+                        }
+                        jsonArrayPDF.add(jsonObjectPDF);
+                    }
+
+                    jsonReturn.put("base64", jsonArrayPDF);
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+
+            jsonReturn.put("flag", "exception" );
+            jsonReturn.put("message", e.getMessage() );
+        }
+
+        // 返回处理完毕消息
+        return jsonReturn;
+    }
+
+
+
 
 
 }

@@ -11,6 +11,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 public class Data2pdfApplication {
 
     public static void main(String[] args) {
+        // Druid监控页面：访问http://127.0.0.1:8080/druid/index.html
         SpringApplication.run(Data2pdfApplication.class, args);
     }
 

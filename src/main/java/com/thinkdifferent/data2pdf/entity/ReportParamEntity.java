@@ -7,6 +7,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import javax.servlet.http.HttpServletResponse;
+import java.sql.Connection;
 
 /**
  * 生成报表时传入参数的对象
@@ -17,6 +18,10 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ReportParamEntity {
 
+    /**
+     * 数据源：json、db
+     */
+    private String dataSource;
     /**
      * 报表输出方式：流(stream）、
      *      单文件回写（singleWriteBack）、多文件回写（multiWriteBack）、
@@ -47,7 +52,7 @@ public class ReportParamEntity {
     /**
      * Service对象
      */
-    private Data2PdfService data2PdfServicep;
+    private Data2PdfService data2PdfService;
     /**
      * JasperReport报表模板对象
      */
@@ -56,6 +61,16 @@ public class ReportParamEntity {
      * Http响应对象
      */
     private HttpServletResponse response;
+
+    /**
+     * 数据库连接对象
+     */
+    private Connection conn;
+
+    /**
+     * 报表数据库查询参数：table\where\orderBy
+     */
+    private JSONArray jaTableParams;
 
 
     public String getOutputType() {
@@ -90,12 +105,12 @@ public class ReportParamEntity {
         this.jaData = jaData;
     }
 
-    public Data2PdfService getData2PdfServicep() {
-        return data2PdfServicep;
+    public Data2PdfService getData2PdfService() {
+        return data2PdfService;
     }
 
-    public void setData2PdfServicep(Data2PdfService data2PdfServicep) {
-        this.data2PdfServicep = data2PdfServicep;
+    public void setData2PdfService(Data2PdfService data2PdfService) {
+        this.data2PdfService = data2PdfService;
     }
 
     public JasperReport getJasperReport() {
@@ -128,5 +143,29 @@ public class ReportParamEntity {
 
     public void setOutputPathFileName(String outputPathFileName) {
         this.outputPathFileName = outputPathFileName;
+    }
+
+    public String getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(String dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public Connection getConn() {
+        return conn;
+    }
+
+    public void setConn(Connection conn) {
+        this.conn = conn;
+    }
+
+    public JSONArray getJaTableParams() {
+        return jaTableParams;
+    }
+
+    public void setJaTableParams(JSONArray jaTableParams) {
+        this.jaTableParams = jaTableParams;
     }
 }

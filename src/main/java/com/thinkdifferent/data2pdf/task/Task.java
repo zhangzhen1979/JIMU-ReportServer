@@ -1,5 +1,6 @@
 package com.thinkdifferent.data2pdf.task;
 
+import com.thinkdifferent.data2pdf.entity.ReportParamEntity;
 import com.thinkdifferent.data2pdf.service.Data2PdfService;
 import com.thinkdifferent.data2pdf.util.CreatePdfUtil;
 import com.thinkdifferent.data2pdf.util.WriteBackUtil;
@@ -44,7 +45,14 @@ public class Task implements RabbitTemplate.ConfirmCallback {
             }
 
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
-            jsonReturn = createPdfUtil.json2Report(strOutputType, data2PdfService, jsonInput, null);
+
+            ReportParamEntity createReportParamEntity = new ReportParamEntity();
+            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setOutputType(strOutputType);
+            createReportParamEntity.setData2PdfService(data2PdfService);
+            createReportParamEntity.setJoData(jsonInput);
+
+            jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){
