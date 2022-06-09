@@ -2,12 +2,8 @@
 server:
   tomcat:
     uri-encoding: UTF-8
-    max-threads: 1000
-    min-spare-threads: 30
   # 端口号
   port: 8080
-  # 超时时间
-  connection-timeout: 5000
 
 spring:
   application:
@@ -75,6 +71,7 @@ spring:
         login-username: root
         #登录密码
         login-password: root
+
 
   # RabbitMQ设置
   rabbitmq:
