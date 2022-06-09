@@ -9,14 +9,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
 
 @Component
 public class Task implements RabbitTemplate.ConfirmCallback {
     // 日志对象，用于输出执行过程中的日志信息
     private static final Logger log = LoggerFactory.getLogger(Task.class);
 
+    @Autowired
+    private DataSource dataSource;
 
     /**
      * 处理接收列表中的数据，异步多线程任务
@@ -37,22 +43,45 @@ public class Task implements RabbitTemplate.ConfirmCallback {
         jsonReturn.put("message", "Create Pdf file Error" );
 
         try{
+            // 读取数据类型
+            String strDataSource = "json";
+            if(jsonInput.has("dataSource")){
+                strDataSource = jsonInput.getString("dataSource");
+            }
+
+            // 判断文件生成方式
             String strOutputType;
             if(jsonInput.has("fileName") && jsonInput.getString("fileName")!=null){
+                // 单文件回写
                 strOutputType = "singleWriteBack";
             }else {
+                // 多文件回写
                 strOutputType = "multiWriteBack";
             }
 
             CreatePdfUtil createPdfUtil = new CreatePdfUtil();
 
             ReportParamEntity createReportParamEntity = new ReportParamEntity();
-            createReportParamEntity.setDataSource("json");
+            createReportParamEntity.setDataSource(strDataSource);
             createReportParamEntity.setOutputType(strOutputType);
             createReportParamEntity.setData2PdfService(data2PdfService);
             createReportParamEntity.setJoData(jsonInput);
 
+            Connection conn = null;
+            if("db".equalsIgnoreCase(strDataSource)){
+                conn = dataSource.getConnection();
+
+                createReportParamEntity.setConn(conn);
+                createReportParamEntity.setJaTableParams(jsonInput.getJSONArray("data"));
+            }
+
             jsonReturn = createPdfUtil.createReportFromData(createReportParamEntity);
+
+            if("db".equalsIgnoreCase(strDataSource)) {
+                if(conn != null){
+                    conn.close();
+                }
+            }
 
             boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonReturn);
             if(blnSuccess){

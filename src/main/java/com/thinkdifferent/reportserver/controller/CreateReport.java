@@ -24,7 +24,7 @@ import java.util.Map;
 @Api(tags="根据传入的JSON生成PDF文件")
 @RestController
 @RequestMapping(value = "/api")
-public class Data2Pdf {
+public class CreateReport {
 
     @Autowired
     private Data2PdfService data2PdfService;
@@ -377,12 +377,39 @@ public class Data2Pdf {
 
     /**
      * 接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件
-     * @param jsonInput 传入的JSON参数。与接口“reportserver”传入的内容相同
+     * @param jsonInput 传入的JSON参数。
+     *                  与接口“reportserver”传入的内容基本相同。
+     *                  如果报表是读取数据库记录，则需要加入“dataSource”参数，值为“db”。
+     *                  不加此参数，则认为是通过JSON数据生成报表。
+     *                  例如：
+     *{
+     * 	"dataSource":"db",
+     * 	"reportFile":"dbReport/arclist",
+     * 	"fileName":"arclist",
+     * 	"writeBackType": "path",
+     *  "writeBack":
+     *  {
+     *   	"path":"D:/cvtest/"
+     *  },
+     *  "writeBackHeaders":
+     *  {
+     *      "Authorization":"Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+     *  },
+     *  "callBackURL": "http://10.11.12.13/callback",
+     * 	"data":[
+     * 		{
+     * 		    "table": "arclist",
+     * 		    "where": "1=1",
+     * 		    "orderBy": "id"
+     * 		}
+     *   ]
+     * }
+
      * @return
      */
     @ApiOperation("接收传入的JSON数据，加入到RabbitMQ队列中，队列异步处理，在指定目录中生成PDF文件")
-    @RequestMapping(value = "/putJson2Mq", method = RequestMethod.POST)
-    public Map<String, String> putJson2Mq(@RequestBody JSONObject jsonInput) {
+    @RequestMapping(value = "/put2Mq", method = RequestMethod.POST)
+    public Map<String, String> put2Mq(@RequestBody JSONObject jsonInput) {
         Map<String, String> mapReturn = new HashMap<>();
         mapReturn.put("flag", "success" );
         mapReturn.put("message", "Set JSON Data to MQ Success" );
