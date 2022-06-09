@@ -12,8 +12,8 @@ spring:
 
   # 如果不使用数据库连接（不查数据库记录生成报表），则配置此项；
   # 如果使用数据库，则注释此项，并配置datasource中的参数
-  autoconfigure:
-    exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
+  #autoconfigure:
+    #exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure
 
   # datasource（Druid用）
   datasource:
@@ -72,6 +72,10 @@ spring:
         #登录密码
         login-password: root
 
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL57Dialect
 
   # RabbitMQ设置
   rabbitmq:

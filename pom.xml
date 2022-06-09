@@ -63,7 +63,7 @@
             <artifactId>jasperreports</artifactId>
             <version>5.6.1</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/jasperreports-5.6.1.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/lib/jasperreports-5.6.1.jar</systemPath>
         </dependency>
         <!-- 字体依赖包（仅限于JasperReport6.x以下版本 -->
         <dependency>
@@ -144,7 +144,7 @@
             <artifactId>web-report-engine</artifactId>
             <version>1.1</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/web-report-engine-1.1.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/lib/web-report-engine-1.1.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -187,14 +187,6 @@
             -->
         </dependency>
 
-        <!-- derby -->
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <!--<version>10.14.2.0</version>-->
-            <!--<scope>test</scope>-->
-        </dependency>
-
         <!-- test -->
         <dependency>
             <groupId>junit</groupId>
@@ -212,16 +204,18 @@
 
     </dependencies>
 
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.mosmith.tools.report.website.storage.bootstrap.Bootstrap</mainClass>
+                    <includeSystemScope>true</includeSystemScope>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 
 </project>

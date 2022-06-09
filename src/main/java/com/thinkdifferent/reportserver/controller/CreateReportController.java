@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Api(tags="根据传入的JSON生成PDF文件")
 @RestController
-@RequestMapping(value = "/api")
+@RequestMapping(value = "/jasper")
 public class CreateReportController {
 
     @Autowired

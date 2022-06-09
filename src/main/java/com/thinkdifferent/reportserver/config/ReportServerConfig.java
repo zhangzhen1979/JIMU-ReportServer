@@ -13,5 +13,4 @@ public class ReportServerConfig {
     public void setOutPutPath(String strOutPutPath) {
         ReportServerConfig.outPutPath = strOutPutPath;
     }
-
 }
