@@ -1,639 +1,96 @@
-**Json2PDF Service** 
-
-**JSON数据生成PDF文件服务**
-
-# 简介
-
-本服务用于将JSON数据通过JasperReport报表模板生成PDF文件。
-
-# 配置说明
-
-本服务的所有配置信息均在于jar包同级文件夹中的application.yml中，默认内容如下：
-
-```yml
-# Tomcat
-server:
-  tomcat:
-    uri-encoding: UTF-8
-    max-threads: 1000
-    min-spare-threads: 30
-  # 端口号
-  port: 8080
-  # 超时时间
-  connection-timeout: 5000
-
-spring:
-  # RabbitMQ设置
-  rabbitmq:
-    # 访问地址
-    host: 127.0.0.1
-    # 端口
-    port: 5672
-    # 用户名
-    username: guest
-    # 密码
-    password: guest
-    # 监听设置
-    listener:
-      # 生产者
-      direct:
-        # 自动启动开关
-        auto-startup: false
-      # 消费者
-      simple:
-        # 自动启动开关
-        auto-startup: false
-
-  application:
-    # 应用名称。如果启用nacos，此值必填
-    name: com.thinkdifferent.convertoffice
-  cloud:
-    # Nacos的配置。
-    # 如果启用Nacos服务作为配置中心，
-    # 则此部分之后的内容均可以在Nacos配置中心中管理，
-    # 不必在此配置文件中维护。
-    nacos:
-      config:
-        # 配置服务地址
-        server-addr: 127.0.0.1:8848
-        # 启用状态
-        enabled: false
-      discovery:
-        # 服务发现服务地址
-        server-addr: 127.0.0.1:8848
-        # 启用状态
-        enabled: false
-
-
-# log4j2设置
-logging:
-  config: log4j2.xml
-  level:
-    com.thinkdifferent: trace
-
-# 线程设置参数 #######
-ThreadPool:
-  # 核心线程数10：线程池创建时候初始化的线程数
-  CorePoolSize: 10
-  # 最大线程数20：线程池最大的线程数，只有在缓冲队列满了之后才会申请超过核心线程数的线程
-  MaxPoolSize: 20
-  # 缓冲队列200：用来缓冲执行任务的队列
-  QueueCapacity: 200
-  # 保持活动时间60秒
-  KeepAliveSeconds: 60
-  # 允许线程的空闲时间60秒：当超过了核心线程出之外的线程在空闲时间到达之后会被销毁
-  AwaitTerminationSeconds: 60
-
-
-convert:
-  data2pdf:
-    outPutPath: D:/data2pdf/pdf/
-```
-
-可以根据服务器的实际情况进行修改。
-
-重点需要修改的内容：
-
-- Nacos服务设置：设置是否启用、服务地址和端口。
-- 线程参数设置：需要根据实际硬件的承载能力，调整线程池的大小。
-- RabbitMQ设置：根据实际软件部署情况，控制是否启用RabbitMQ；如果启用RabbitMQ，一定要根据服务的配置情况修改地址、端口、用户名、密码等信息。
-- 本服务设置：根据本服务所在服务器的实际情况，修改本地文件输出路径。
-
-# 使用说明
-
-本服务提供REST接口供外部系统调用，提供了直接转换接口和通过MQ异步转换的接口。
-
-## 生成PDF接口说明
-
-直接生成PDF接口URL：http://host:port/api/json2pdf
-
-MQ异步生成PDF接口URL：http://host:port/api/json2mq
-
-接口调用方式：POST
-
-传入参数形式：JSON
-
-传入参数示例：
-
-```JSON
-{
-	"reportFile":"jzpz/jzpz",
-	"fileNameKey":"voucher_code",
-    "writeBackType": "path",
-    "writeBack":{
-       "path":"D:/data2pdf/pdf/"
-    },
-    "callBackURL": "http://1234.com/callback.do",
-    "callBackHeaders": {
-		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
-	},
-	"data":[
-		{
-			"id": "1",
-		    "voucher_code": "20210507SJFBX1234567", 
-		    "voucher_company_name": "3000XXXX有限公司", 
-		    "create_date": "2021年08月31日", 
-		    "voucher_number": "6012345234", 
-		    "ac_doc_typ_name": "EMS凭证", 
-		    "total_chn": "壹佰元整", 
-		    "debit_sum": "100.00", 
-		    "credit_sum": "100.00", 
-		    "post_name": "PI_USER",
-		    "pages":2,
-		    "detail":[
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": "100.00"
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				}
-		    ]
-		},
-		{
-			"id": "2",
-		    "voucher_code": "20210507SJFBX1234568", 
-		    "voucher_company_name": "3000XXXX有限公司", 
-		    "create_date": "2021年08月31日", 
-		    "voucher_number": "6012345234", 
-		    "ac_doc_typ_name": "EMS凭证", 
-		    "total_chn": "陆佰元整", 
-		    "debit_sum": "600.00", 
-		    "credit_sum": "600.00", 
-		    "post_name": "PI_USER",
-		    "pages":2,
-		    "detail":[
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": "600.00"
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				}
-		    ]
-		}
-	]
-}
-```
-
-以下分块解释传入参数每部分的内容。
-
-### 输入信息
-
-系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的PDF文件。
-
-注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
-
-以下是输入设置部分：
-
-```json
-	"reportFile":"jzpz/jzpz",
-	"fileNameKey":"voucher_code",
-```
-
-- reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
-- fileNameKey：必填。本服务允许对一个报表模板，一次传入多组数据，对应生成多个PDF报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
-
-### 回写信息
-
-本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
-
-注意：返回Base64接口无此部分回写信息。
-
-当使用文件路径（Path）方式回写时，配置如下：
-
-```json
-	"writeBackType": "path",
-	"writeBack": {
-		"path": "D:/data2pdf/pdf/"
-	},
-```
-
-- writeBackType：必填，值为“path”。
-- writeBack：必填。JSON对象，path方式中，key为“path”，value为MP4文件回写的路径。
-
-当使用http协议上传（url）方式回写时，配置如下：
-
-```json
-	"writeBackType": "url",
-	"writeBack": {
-		"url": "http://localhost/uploadfile.do"
-	},
-	"writeBackHeaders": {
-		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
-	},
-```
-
-- writeBackType：必填，值为“url”。
-- writeBack：必填。JSON对象，url方式中，key为“url”，value为业务系统提供的文件上传接口API地址。
-- writeBackHeaders：非必填。如果Web服务器访问时需要设置请求头或Token认证，则需要在此处设置请求头的内容；否则此处可不添加。
-
-当使用FTP服务上传（ftp）方式回写时，配置如下：
-
-```json
-	"writeBackType": "ftp",
-	"writeBack": {
-         "passive": "false",
-		"host": "ftp://localhost",
-         "port": "21",
-         "username": "guest",
-         "password": "guest",
-         "filepath": "/2021/10/"
-	},
-```
-
-- writeBackType：必填，值为“ftp”。
-- writeBack：必填。JSON对象。
-  - passive：是否是被动模式。true/false
-  - host：ftp服务的访问地址。
-  - port：ftp服务的访问端口。
-  - username：ftp服务的用户名。
-  - password：ftp服务的密码。
-  - filepath：文件所在的路径。
-
-### 回调信息
-
-业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
-
-注意：返回Base64接口无此部分信息。
-
-```json
-	"callBackURL": "http://10.11.12.13/callback.do",
-	"callBackHeaders": {
-		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
-	},
-```
-
-- callBackURL：回调接口的URL。回调接口需要接收两个参数：
-  - file：处理后的文件名。本例为“001-online”。
-  - flag：处理后的状态，值为：success 或 error。
-- callBackHeaders：如果回调接口需要在请求头中加入认证信息等，可以在此处设置请求头的参数和值。
-
-接口url示例：
-
-```
-http://10.11.12.13/callback.do?file=001-online&flag=success
-```
-
-### 数据域
-
-data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
-
-### 返回信息
-
-接口返回信息示例如下：
-
-```json
-{
-    "flag": "success",
-    "message": "PDF reoprt create success. PDF file write back success. API call back success."
-}
-```
-
-- flag：处理状态。success，成功；error，错误，失败。
-- message：返回接口消息。
-
-
-
-## 生成PDF后转换为Base64字符串返回
-
-生成一个PDF后返回Base64字符串接口URL：http://host:port/api/json2pdf2base64
-
-生成多个PDF后返回Base64字符串接口URL：http://host:port/api/json2pdfs2base64
-
-接口调用方式：POST
-
-传入参数形式：JSON
-
-传入参数示例：
-
-```JSON
-{
-	"reportFile":"jzpz/jzpz",
-	"fileNameKey":"voucher_code",
-    "data":[
-		{
-			"id": "1",
-		    "voucher_code": "20210507SJFBX1234567", 
-		    "voucher_company_name": "3000XXXX有限公司", 
-		    "create_date": "2021年08月31日", 
-		    "voucher_number": "6012345234", 
-		    "ac_doc_typ_name": "EMS凭证", 
-		    "total_chn": "壹佰元整", 
-		    "debit_sum": "100.00", 
-		    "credit_sum": "100.00", 
-		    "post_name": "PI_USER",
-		    "pages":2,
-		    "detail":[
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": "100.00"
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				}
-		    ]
-		},
-		{
-			"id": "2",
-		    "voucher_code": "20210507SJFBX1234568", 
-		    "voucher_company_name": "3000XXXX有限公司", 
-		    "create_date": "2021年08月31日", 
-		    "voucher_number": "6012345234", 
-		    "ac_doc_typ_name": "EMS凭证", 
-		    "total_chn": "陆佰元整", 
-		    "debit_sum": "600.00", 
-		    "credit_sum": "600.00", 
-		    "post_name": "PI_USER",
-		    "pages":2,
-		    "detail":[
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "100.00",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "XXXXX店报销手机费",
-				    "subject_name": "6601000000手机费",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": "600.00"
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				},
-		    	{
-				    "abstract": "",
-				    "subject_name": "",
-				    "debit_amount_lc": "",
-				    "credit_amount_lc": ""
-				}
-		    ]
-		}
-	]
-}
-```
-
-以下分块解释传入参数每部分的内容。
-
-### 输入信息
-
-系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的PDF文件。
-
-注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
-
-以下是输入设置部分：
-
-```json
-	"reportFile":"jzpz/jzpz",
-	"fileNameKey":"voucher_code",
-```
-
-- reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
-- fileNameKey：必填。本服务允许对一个报表模板，一次传入多组数据，对应生成多个PDF报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
-
-### 数据域
-
-data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
-
-注意：
-
-- data2pdf2base64接口中，数据域中只有第一个报表文件的JSON对象有效，会生成PDF后返回Base64字符串。
-- data2pdfs2base64接口中，数据域中可以有多个JSON对象数据。
-
-### 返回信息
-
-data2pdf2base64接口返回信息示例如下：
-
-```
-JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
-```
-
-- 返回Base64编码后的PDF文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
-
-
-
-data2pdfs2base64接口返回信息示例如下：
-
-```json
-{
-    "flag": "success",
-    "message": "Create Pdf Report file Success",
-    "base64": [
-        {
-            "filename": "20210507SJFBX1234567.pdf",
-            "base64": "JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVy…………"
-        },
-        {
-            "filename": "20210507SJFBX1234568.pdf",
-            "base64": "JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVy…………"
-        }
-    ]
-}
-```
-
-- flag：处理状态。success，成功；error，错误，失败。
-- message：返回接口消息。
-- base64
-  - filename：文件名
-  - base64：文件Base64编码之后的字符串。
-
-# 代码结构说明
-
-本项目所有代码均在  com.thinkdifferent.data2pdf 之下，包含如下内容：
-
-- config
-  - Data2PDFConfig：本服务自有配置读取。
-  - RabbitMQConfig：RabbitMQ服务配置读取。
-- consumer
-  - CreatePDFConsumer：MQ消费者，消费队列中传入的JSON参数，执行任务（Task）。
-- controller
-  - Data2Pdf：REST接口，提供直接生成PDF接口，和调用MQ异步生成PDF的接口。
-- service
-  - Data2PdfService：JSON数据生成PDF文件、文件回写上传、接口回调等核心逻辑处理。
-  - RabbitMQService：将JSON消息加入到队列中的服务层处理。
-- task
-  - Task：异步多线程任务，供MQ消费者调用，最大限度的提升并行能力。
-- utils
-  - CreatePdfUtils：处理传入的JSON数据，调用JasperReport报表模板，生成报表PDF文件的工具类。
-  - WriteBackUtil：回写文件、回调接口的工具类。
+# Report Server 报表服务
+
+将JSON数据生成报表、将报表模板中设置的SQL查询结果生成报表。
+支持生成PDF文件，支持回写到指定位置；支持直接返回HTTP Reponse。
+
+---
+
+## 说明文档
+
+[![快速开始](https://img.shields.io/badge/%E8%AF%95%E7%94%A8-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B-blue.svg)](readme.md)
+[![详细介绍](https://img.shields.io/badge/%E6%8E%A5%E5%8F%A3-%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D-blue.svg)](detail.md)
+
+---
+
+## 特性
+
+* 支持多种文件输入方式：文件路径、http（get）下载、ftp，可扩展
+* 接口方式：REST，POST方式。
+* 参数格式：JSON。
+* 数据源：JSON / DB（JSON中可以设置查询参数，与报表模板中参数匹配）。
+* 报表引擎：JasperReport、XMReport（开发中）。
+* 报表生成方式：
+  * HTTP Reponse：页面可直接显示。
+    * HTML：返回html文件流，可直接用于页面展示。但不建议用于打印，此种模式对纸张的兼容性不好。
+    * PDF：返回pdf文件流，可直接用于页面展示、打印。
+
+  * PDF文件：支持直接回写（文件路径、ftp），也可异步回写（MQ队列处理）。可同时生成多个报表文件。
+
+* 支持结果回调。
+
+## 依赖
+
+* `jdk8`: 编译、运行环境
+* `maven`: 只运行`jar`不需要；编译打包需要，建议`V3.6.3`以上版本
+* `数据库`: 可通过配置文件关闭；如果报表采用“数据库查询”方式，需要此项。当前版本支持MySQL，如需支持其他数据库，请加入对应的数据库驱动jar包，并修改配置文件。
+* `JasperReport Studio 5.6.1`：报表模板设计器。如需自制报表模板，则需要此项。使用手册请在网络中搜索。
+
+## 快速启动
+
+1. 确认文件目录结构
+
+   ```
+   │  application.yml
+   │  reportserver-{版本号}.jar
+   │  {项目名}.license
+   ```
+
+2. 修改配置`application.yml`：
+
+   ​	2.1. 临时文件夹：用于存储生成的PDF报表文件。需要配置 reportserver.outPutPath 的值，此处需要配置文件夹的绝对路径。
+
+   ​		2.2. 数据库连接配置：如果使用“数据库查询”类型的报表，则需要进行此配置。
+
+   ​			2.2.1. 注释掉原有的  spring.autoconfigure.exclude 配置项，打开数据库自动连接。
+
+   ​			2.2.2. 配置  spring.datasource 下的参数
+
+   | 配置名                              | 配置说明      | 示例                                                         |
+   | ----------------------------------- | ------------- | ------------------------------------------------------------ |
+   | spring.datasource.driver-class-name | 数据库驱动    | com.mysql.cj.jdbc.Driver                                     |
+   | spring.datasource.url               | 数据库连接URL | jdbc:mysql://localhost/udmc?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&serverTimezone=UTC&useSSL=false |
+   | spring.datasource.username          | 用户名        | root                                                         |
+   | spring.datasource.password          | 密码          | root                                                         |
+
+   ​		2.3. MQ消息队列配置：如果使用RabbitMQ进行异步处理（提升稳定性），则需要进行此配置（默认已关闭）。
+
+   | 配置名                                       | 配置说明         | 示例      |
+   | -------------------------------------------- | ---------------- | --------- |
+   | spring.rabbitmq.host                         | MQ服务地址       | 127.0.0.1 |
+   | spring.rabbitmq.port                         | 端口             | 5672      |
+   | spring.rabbitmq.username                     | 用户名           | guest     |
+   | spring.rabbitmq.password                     | 密码             | guest     |
+   | spring.rabbitmq.listener.direct.auto-startup | “生产者”监听开关 | true      |
+   | spring.rabbitmq.listener.simple.auto-startup | “消费者”监听开关 | true      |
+
+3. 以管理员身份运行
+
+   | 操作系统 | 运行示例                                    |
+   | -------- | ------------------------------------------- |
+   | Windows  | javaw -jar reportserver-{版本号}.jar        |
+   | linux    | nohup java -jar reportserver-{版本号}.jar & |
+
+4. 浏览器访问 `http://{ip}:{端口}` , 返回 **启动成功** 标识项目启动正常
+
+
+
+## 常见问题
+
+1. 项目日志在哪里？
+
+  运行目录下logs文件夹内
+
+2. 项目启动失败，日志中有`The Tomcat connector configured to listen on port 8080 failed to start. The port may already be in use or the connector may be misconfigured.`的报错
+   
+
+  端口被占用，修改`application.yml`中`server.port`, 改为其他端口

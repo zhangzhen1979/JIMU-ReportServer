@@ -24,7 +24,7 @@ import java.util.Map;
 @Api(tags="根据传入的JSON生成PDF文件")
 @RestController
 @RequestMapping(value = "/api")
-public class CreateReport {
+public class CreateReportController {
 
     @Autowired
     private Data2PdfService data2PdfService;
