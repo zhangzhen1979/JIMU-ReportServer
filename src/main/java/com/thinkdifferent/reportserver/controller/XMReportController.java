@@ -74,10 +74,8 @@ public class XMReportController {
         String previewOptionsJson = "{\"docType\": \"PDF\",\"dividePage\": true}";
         // 获取reportFile中的值作为“报表模板ID”。即为template表中的F_id字段的值，形如：template-e7e2ad60-596b-41d4-80f8-65991da9049a
         String templateId = jsonInput.getString("reportFile");
-        // 获取data中的值，作为“预览数据”
-        JSONObject joData = new JSONObject();
-        joData.put("data", jsonInput.getJSONArray("data"));
-        String previewDataJson = joData.toString();
+        // 获取“预览数据”
+        String previewDataJson = jsonInput.toString();
         // 获取options中的值，作为“预览参数”。形如：{"docType":"PDF","dividePage":true}
         if(jsonInput.has("options")){
             previewOptionsJson = jsonInput.getJSONObject("options").toString();
@@ -244,11 +242,9 @@ public class XMReportController {
     public class JDBCExecutor {
         private final Pattern placeHolderPattern=Pattern.compile("\\$\\{(.*?)\\}");
         
-        public Object executeJDBCQuery(Map<String, Object> model) throws Exception {
-            String sql=(String) (model.get("sql") + "");
-            
+        public Object executeJDBCQuery(String sql) throws Exception {
             sql=replacePlaceHolders(sql);
-            
+
             Connection connection=null;
             Statement statement=null;
             ResultSet resultSet=null;
