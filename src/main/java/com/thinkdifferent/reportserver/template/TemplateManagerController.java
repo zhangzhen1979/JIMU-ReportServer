@@ -39,7 +39,13 @@ public class TemplateManagerController {
     @GetMapping("/getTemplates")
     @ResponseBody
     public Object getTemplates(@RequestParam(GROUP_ID) String groupId) throws Exception {
-        List<Map<String, Object>> templateInfos = managerService.getTemplates(groupId);
+        List<Map<String, Object>> templateInfos;
+        if(groupId != null && !groupId.isEmpty()){
+            templateInfos = managerService.getTemplates(groupId);
+        }else{
+            templateInfos = managerService.getTemplates();
+        }
+
         return templateInfos;
     }
     

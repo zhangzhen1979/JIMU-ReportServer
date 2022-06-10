@@ -40,7 +40,25 @@ public class TemplateManagerService {
     private EntityManager getEntityManager() {
         return entityManagerFactory.createEntityManager(SynchronizationType.SYNCHRONIZED);
     }
-    
+
+    @Transactional
+    public List<Map<String, Object>> getTemplates() {
+        EntityManager entityManager=getEntityManager();
+        Query query=entityManager.createQuery("SELECT t.id AS id, t.groupId AS groupId, t.name AS name, t.group as isGroup FROM Template t ");
+        List<Object[]> resultList=query.getResultList();
+
+        List<Map<String, Object>> templateInfos=new ArrayList<Map<String, Object>>();
+        for(Object[] rowFields: resultList) {
+            Map<String, Object> templateInfo=new LinkedHashMap<String, Object>();
+            templateInfo.put(ID, rowFields[0]);
+            templateInfo.put(GROUP_ID, rowFields[1]);
+            templateInfo.put(NAME, rowFields[2]);
+            templateInfo.put(IS_GROUP, rowFields[3]);
+            templateInfos.add(templateInfo);
+        }
+        return templateInfos;
+    }
+
     @Transactional
     public List<Map<String, Object>> getTemplates(String groupId) {
         EntityManager entityManager=getEntityManager();

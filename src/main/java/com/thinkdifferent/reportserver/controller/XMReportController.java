@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thinkdifferent.reportserver.sharescript.ShareScriptManagerService;
 import com.thinkdifferent.reportserver.template.TemplateManagerService;
 import com.thinkdifferent.reportserver.util.IOUtils;
+import net.sf.json.JSONObject;
 import org.mosmith.tools.report.engine.execute.context.ExecuteContext;
 import org.mosmith.tools.report.engine.execute.script.javascript.JSContextAware;
 import org.mosmith.tools.report.engine.execute.script.javascript.JSEngineTopLevel;
@@ -19,6 +20,7 @@ import org.mozilla.javascript.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,22 +54,66 @@ public class XMReportController {
         String templateData=httpServletRequest.getParameter("templateData");
         String previewDataJson=httpServletRequest.getParameter("previewData");
         String previewOptionsJson=httpServletRequest.getParameter("previewOptions");
-        
+
         String templateId=httpServletRequest.getParameter("templateId");
-        if(templateId!=null && !templateId.trim().isEmpty()) {
-            Map<String, Object> templateInfo=templateManagerService.getTemplate(templateId);
-            templateData=new String((byte[]) templateInfo.get(DATA), "utf-8");
-        }
-        
-        Reader templateDataReader=new StringReader(templateData);
-        Object previewData=readJson(previewDataJson);
+
         Map<String, Object> previewOptions=(Map<String, Object>) readJson(previewOptionsJson);
 
         String docType=StringUtils.nonull(previewOptions.get("docType"));
         if (httpServletRequest.getParameter("docType")!=null) {
             docType=httpServletRequest.getParameter("docType");
         }
-        
+
+        createReport(templateId, templateData,
+                previewDataJson, previewOptions, docType,
+                httpServletResponse);
+    }
+
+    @PostMapping("/getReport")
+    public void getReport(@RequestBody JSONObject jsonInput, HttpServletResponse httpServletResponse) throws Exception {
+        String previewOptionsJson = "{\"docType\": \"PDF\",\"dividePage\": true}";
+        // 获取reportFile中的值作为“报表模板ID”。即为template表中的F_id字段的值，形如：template-e7e2ad60-596b-41d4-80f8-65991da9049a
+        String templateId = jsonInput.getString("reportFile");
+        // 获取data中的值，作为“预览数据”
+        JSONObject joData = new JSONObject();
+        joData.put("data", jsonInput.getJSONArray("data"));
+        String previewDataJson = joData.toString();
+        // 获取options中的值，作为“预览参数”。形如：{"docType":"PDF","dividePage":true}
+        if(jsonInput.has("options")){
+            previewOptionsJson = jsonInput.getJSONObject("options").toString();
+        }
+
+        Map<String, Object> previewOptions=(Map<String, Object>) readJson(previewOptionsJson);
+        String docType=StringUtils.nonull(previewOptions.get("docType"));
+
+        createReport(templateId, null,
+                previewDataJson, previewOptions, docType,
+                httpServletResponse);
+    }
+
+    /**
+     * 根据传入的参数，创建报表文件
+     * @param templateId 报表模板ID
+     * @param templateData 报表模板数据（模板ID有值时，此参数可空）
+     * @param previewDataJson 预览用的JSON数据
+     * @param previewOptions 预览参数
+     * @param docType 文件类型
+     * @param httpServletResponse HTTP响应对象
+     * @throws Exception
+     */
+    private void createReport(String templateId, String templateData,
+                              String previewDataJson, Map<String, Object> previewOptions, String docType,
+                              HttpServletResponse httpServletResponse)
+            throws Exception{
+
+        if(templateId!=null && !templateId.trim().isEmpty()) {
+            Map<String, Object> templateInfo=templateManagerService.getTemplate(templateId);
+            templateData=new String((byte[]) templateInfo.get(DATA), "utf-8");
+        }
+
+        Reader templateDataReader=new StringReader(templateData);
+        Object previewData=readJson(previewDataJson);
+
         File file;
         String fileName;
         String contentType;
@@ -105,12 +151,12 @@ public class XMReportController {
             fileName="preview.pdf";
             contentType="application/pdf";
         }
-        
+
         InputStream fileIs=null;
         try {
             httpServletResponse.setContentType(contentType);
             httpServletResponse.setHeader("Content-Disposition", "inline;filename=" + fileName);
-            
+
             fileIs=new FileInputStream(file);
             OutputStream os=httpServletResponse.getOutputStream();
             IOUtils.copyStream(fileIs, os);
@@ -120,8 +166,9 @@ public class XMReportController {
                 boolean deleted=file.delete();
             }
         }
+
     }
-    
+
     private ReportHelper getReportHelper() {
         ReportHelper reportHelper=new ReportHelper();
         reportHelper.setBuiltIn("scriptLoader", new ScriptLoader());
