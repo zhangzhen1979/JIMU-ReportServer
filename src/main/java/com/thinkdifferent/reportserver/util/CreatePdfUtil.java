@@ -77,6 +77,10 @@ public class CreatePdfUtil {
         // 加载报表模板
         JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
 
+        if(jasperStream != null){
+            jasperStream.close();
+        }
+
         //报表文件临时存储设置，切记！！此临时文件夹一定要真实存在！！！
         JRFileVirtualizer jrFileVirtualizer = new JRFileVirtualizer(2, "cacheDir");
         jrFileVirtualizer.setReadOnly(true);
@@ -131,6 +135,8 @@ public class CreatePdfUtil {
         }else{
             // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
             for(int i=0;i<jaData.size();i++){
+                reportParamEntity.setJoData(jaData.getJSONObject(i));
+
                 // 从指定的key中取值，设定新生成的PDF报表的文件名
                 String strFileName = jaData.getJSONObject(i).getString(strFileNameKey)+".pdf";
                 // 设定pdf输出的路径和文件名

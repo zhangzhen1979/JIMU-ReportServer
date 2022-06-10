@@ -223,7 +223,6 @@ public class CreateReportController {
                 strOutputType = "multiWriteBack";
             }
 
-
             ReportParamEntity createReportParamEntity = new ReportParamEntity();
             createReportParamEntity.setDataSource("json");
             createReportParamEntity.setOutputType(strOutputType);
