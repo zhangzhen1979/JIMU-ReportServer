@@ -32,7 +32,7 @@
 
 * `jdk8`: 编译、运行环境
 * `maven`: 只运行`jar`不需要；编译打包需要，建议`V3.6.3`以上版本
-* `数据库`: 可通过配置文件关闭；如果报表采用“数据库查询”方式，需要此项。当前版本支持MySQL，如需支持其他数据库，请加入对应的数据库驱动jar包，并修改配置文件。
+* `数据库`: 当前版本支持MySQL，如需支持其他数据库，请加入对应的数据库驱动jar包，并修改配置文件。
 * `JasperReport Studio 5.6.1`：报表模板设计器。如需自制报表模板，则需要此项。使用手册请在网络中搜索。
 
 ## 快速启动
@@ -53,14 +53,15 @@
 
    ​			2.2.1. 注释掉原有的  spring.autoconfigure.exclude 配置项，打开数据库自动连接。
 
-   ​			2.2.2. 配置  spring.datasource 下的参数
+   ​			2.2.2. 配置  spring.datasource和spring.jpa 下的参数
 
-   | 配置名                              | 配置说明      | 示例                                                         |
-   | ----------------------------------- | ------------- | ------------------------------------------------------------ |
-   | spring.datasource.driver-class-name | 数据库驱动    | com.mysql.cj.jdbc.Driver                                     |
-   | spring.datasource.url               | 数据库连接URL | jdbc:mysql://localhost/udmc?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&serverTimezone=UTC&useSSL=false |
-   | spring.datasource.username          | 用户名        | root                                                         |
-   | spring.datasource.password          | 密码          | root                                                         |
+   | 配置名                                  | 配置说明            | 示例                                                         |
+   | --------------------------------------- | ------------------- | ------------------------------------------------------------ |
+   | spring.datasource.driver-class-name     | 数据库驱动          | com.mysql.cj.jdbc.Driver                                     |
+   | spring.datasource.url                   | 数据库连接URL       | jdbc:mysql://localhost/udmc?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&serverTimezone=UTC&useSSL=false |
+   | spring.datasource.username              | 用户名              | root                                                         |
+   | spring.datasource.password              | 密码                | root                                                         |
+   | spring.jpa.properties.hibernate.dialect | Hibernate SQL方言包 | org.hibernate.dialect.MySQL57Dialect                         |
 
    ​		2.3. MQ消息队列配置：如果使用RabbitMQ进行异步处理（提升稳定性），则需要进行此配置（默认已关闭）。
 
