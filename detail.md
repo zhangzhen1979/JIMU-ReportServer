@@ -391,17 +391,17 @@ SQL参数为传送给报表模板的核心值，内容按照报表中的实际�
 
 系统提供多个接口，满足多种报表使用场景
 
-- 传入JSON，返回PDF报表给HTTP Reponse：http://host:port/api/getJson2Pdf
-- 传入JSON，返回HTML报表给HTTP Reponse：http://host:port/api/getJson2Html
-- 传入JSON，生成PDF报表文件，回写到指定位置：http://host:port/api/getJson2PdfFile
-- 传入JSON，生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/api/getJson2PdfBase64
-- 传入JSON，生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/api/getJson2PdfsBase64
-- 传入数据表查询参数（JSON格式），返回PDF报表给HTTP Reponse：http://host:port/api/getDb2Pdf
-- 传入数据表查询参数（JSON格式），返回HTML报表给HTTP Reponse：http://host:port/api/getDb2Html
-- 传入数据表查询参数（JSON格式），生成PDF报表文件，回写到指定位置：http://host:port/api/getDb2PdfFile
-- 传入数据表查询参数（JSON格式），生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/api/getDb2PdfBase64
-- 传入数据表查询参数（JSON格式），生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/api/getDb2PdfsBase64
-- 传入JSON，加入到MQ队列异步处理，生成单个或多个PDF文件，回写到指定位置：http://host:port/api/put2Mq
+- 传入JSON，返回PDF报表给HTTP Reponse：http://host:port/jasper/getJson2Pdf
+- 传入JSON，返回HTML报表给HTTP Reponse：http://host:port/jasper/getJson2Html
+- 传入JSON，生成PDF报表文件，回写到指定位置：http://host:port/jasper/getJson2PdfFile
+- 传入JSON，生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/jasper/getJson2PdfBase64
+- 传入JSON，生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/jasper/getJson2PdfsBase64
+- 传入数据表查询参数（JSON格式），返回PDF报表给HTTP Reponse：http://host:port/jasper/getDb2Pdf
+- 传入数据表查询参数（JSON格式），返回HTML报表给HTTP Reponse：http://host:port/jasper/getDb2Html
+- 传入数据表查询参数（JSON格式），生成PDF报表文件，回写到指定位置：http://host:port/jasper/getDb2PdfFile
+- 传入数据表查询参数（JSON格式），生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/jasper/getDb2PdfBase64
+- 传入数据表查询参数（JSON格式），生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/jasper/getDb2PdfsBase64
+- 传入JSON，加入到MQ队列异步处理，生成单个或多个PDF文件，回写到指定位置：http://host:port/jasper/put2Mq
 
 
 
