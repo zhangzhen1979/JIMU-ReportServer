@@ -180,9 +180,11 @@ reportserver:
 
 ------
 
-## XMReport引擎使用说明
+## XMReport引擎接口使用说明
 
-### “模板查询”接口
+XMReport引擎在本服务中提供如下接口：
+
+### templateManager/getTemplates：模板查询
 
 使用报表前，需要先在desinger中配置报表模板，并保存。
 
@@ -212,7 +214,7 @@ reportserver:
 
 
 
-### “生成报表”接口
+### report/getStream：生成报表
 
 提供REST接口供外部系统调用，可直接生成各种格式报表。
 
@@ -330,7 +332,7 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 
 
-### “生成报表文件并回写”接口
+### report/getFile：生成报表文件并回写到指定位置
 
 系统提供生成报表文件，并根据传入的参数要求，将文件回写到指定位置的功能。
 
@@ -393,20 +395,20 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 #### 报表信息
 
-与“getStream”接口参数内容相同。
+与“report/getStream”接口“报表信息”内容相同。
 
 
 #### 数据域
 
-与“getStream”接口参数内容相同。
+与“report/getStream”接口“数据域”内容相同。
 
 #### 回写信息
 
 本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
 
-注意：返回Base64接口无此部分回写信息。
+##### path
 
-当使用文件路径（Path）方式回写时，配置如下：
+当使用文件路径（path）方式回写时，配置如下：
 
 ```json
 	"fileName": "arcList",
@@ -419,6 +421,8 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 - fileName：输出的报表文件名。（不包含扩展名，系统会自动根据选择的输出格式，自动组装扩展名）
 - writeBackType：必填，值为“path”。
 - writeBack：必填。JSON对象，path方式中，key为“path”，value为MP4文件回写的路径。
+
+##### url
 
 当使用http协议上传（url）方式回写时，配置如下：
 
@@ -435,6 +439,8 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 - writeBackType：必填，值为“url”。
 - writeBack：必填。JSON对象，url方式中，key为“url”，value为业务系统提供的文件上传接口API地址。
 - writeBackHeaders：非必填。如果Web服务器访问时需要设置请求头或Token认证，则需要在此处设置请求头的内容；否则此处可不添加。
+
+##### ftp
 
 当使用FTP服务上传（ftp）方式回写时，配置如下：
 
@@ -459,13 +465,9 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
   - password：ftp服务的密码。
   - filepath：文件所在的路径。
 
-
-
 #### 回调信息
 
 业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
-
-注意：返回Base64接口无此部分信息。
 
 ```json
 	"callBackURL": "http://10.11.12.13/callback.do",
@@ -485,8 +487,6 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 http://10.11.12.13/callback.do?file=001-online&flag=success
 ```
 
-
-
 #### 返回信息
 
 在文件生成、回写过程处理完毕后，接口返回信息示例如下：
@@ -505,7 +505,7 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 
 
-### “返回报表文件Base64”接口
+### report/getBase64：返回报表文件Base64
 
 系统提供生成报表文件，并根据传入的参数要求，将文件Base64编码后返回。
 
@@ -564,16 +564,12 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 #### 报表信息
 
-与“getStream”接口参数内容相同。
+与“report/getStream”接口“报表信息”内容相同。
 
 
 #### 数据域
 
-与“getStream”接口参数内容相同。
-
-#### 回调信息
-
-与“getFile”接口参数内容相同。
+与“report/getStream”接口“数据域”内容相同。
 
 #### 返回信息
 
@@ -587,7 +583,7 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 
 
 
-### “数据加入到MQ”接口
+### report/put2Mq：数据加入到MQ
 
 系统提供生成报表文件，并根据传入的参数要求，将文件Base64编码后返回。
 
@@ -603,6 +599,10 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 {
 	"reportFile":"template-e7e2ad60-596b-41d4-80f8-65991da9049a",
 	"fileName":"arcList",
+	"writeBackType": "path",
+	"writeBack": {
+		"path": "D:/data2pdf/pdf/"
+	},
 	"data":[
     	{
 		    "year": "2022", 
@@ -646,16 +646,20 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 
 #### 报表信息
 
-与“getStream”接口参数内容相同。
+与“report/getStream”接口“报表信息”内容相同。
 
 
 #### 数据域
 
-与“getStream”接口参数内容相同。
+与“report/getStream”接口“数据域”内容相同。
+
+#### 回写信息
+
+与“report/getFile”接口“回写信息”内容相同。
 
 #### 回调信息
 
-与“getFile”接口参数内容相同。
+与“report/getFile”接口“回调信息”内容相同。
 
 #### 返回信息
 
@@ -673,21 +677,168 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 
 ## JasperReport引擎使用说明
 
-本服务提供REST接口供外部系统调用，提供了直接转换接口和通过MQ异步转换的接口。
+XMReport引擎在本服务中提供如下接口：
 
-系统提供多个接口，满足多种报表使用场景
+### jasper/getStream：生成报表
 
-- http://host:port/jasper/getStream：传入JSON或数据表查询参数（JSON格式），返回报表给HTTP Reponse。
-- http://host:port/jasper/getFile：传入JSON或数据表查询参数（JSON格式），生成报表文件，回写到指定位置，并可回调接口。
-- http://host:port/jasper/getBase64：传入JSON或数据表查询参数（JSON格式），生成单个报表文件，直接返回文件的Base64字符串。
-- http://host:port/jasper/getBase64s：传入JSON或数据表查询参数（JSON格式），生成多个报表文件，通过JSON返回文件的Base64字符串。
-- http://host:port/jasper/put2Mq：传入JSON，加入到MQ队列异步处理，生成单个或多个报表文件，回写到指定位置。
+传入JSON或数据表查询参数（JSON格式），返回报表给HTTP Reponse。
 
-接口调用方式：POST
+- 接口地址：http://host:port/jasper/getStream
 
-传入参数形式：JSON
+- 接口调用方式：POST
+
+- 传入参数形式：JSON
+
+  传入参数示例：
+
+```json
+{
+	"reportFile":"dah/jb-4cm",
+	"fileName":"dahjb",
+    "docType": "pdf",
+    "dataSource": "json",
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+            "barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+            "barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+            "barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+            "barcode":"1234567894"
+    	}
+    ]
+}
+```
+
+以下分块解释传入参数每部分的内容。
 
 
+
+#### 输入信息
+
+系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的报表文件。
+
+注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
+
+以下是输入设置部分：
+
+```json
+	"reportFile":"dah/jb-4cm",
+	"fileNameKey":"barcode",
+    "docType": "pdf",
+    "dataSource": "json",
+```
+
+或
+
+```json
+	"reportFile":"dah/jb-4cm",
+	"fileName":"dahjb",
+    "docType": "pdf",
+    "dataSource": "db",
+```
+
+- reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
+- fileNameKey 或 fileName：必填其一（不可同时存在）。
+  - 本服务允许对一个报表模板，一次传入多组数据，对应生成多个报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
+  - 如果只需要将所有数据生成到一个报表文件中，则需要配置“fileName”，并指定一个文件名。
+- docType：输出报表格式。值可以为：HTML、PDF、Word、Excel、CSV、XML、ODT
+- dataSource：数据源类型。与data中的内容对应。值可以为：json、db。
+
+
+
+#### 数据域
+
+必填！！
+
+data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
+
+如果数据源类型为“json”，则内容为报表中的实际数据。例如：
+
+```json
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+            "barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+            "barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+            "barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+            "barcode":"1234567894"
+    	}
+    ]
+```
+
+如果数据源类型为“db”（即使用“数据库查询”类型的报表模板），则data域中可以存放报表模板中设置的参数以及参数值。例如：
+
+```json
+    "data":[
+        {
+            "table": "dat_archive_arc_jh",
+            "where": "1=1",
+            "orderBy": "id"
+        }
+    ]
+```
+
+
+
+#### 返回信息
+
+给HTTPReponse返回报表文件流，可以在浏览器中直接显示。
+
+
+
+### jasper/getFile：生成报表文件并回写到指定位置
+
+传入JSON或数据表查询参数（JSON格式），生成报表文件，回写到指定位置，并可回调接口。
+
+- 接口地址：http://host:port/jasper/getFile
+
+- 接口调用方式：POST
+
+- 传入参数形式：JSON
+
+  传入参数示例：
 
 传入参数示例：
 
@@ -699,7 +850,7 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
     "docType": "pdf",
     "writeBackType": "path",
     "writeBack":{
-       "path":reportserver
+       "path":"d:/outpdf/"
     },
     "callBackURL": "http://1234.com/callback.do",
     "callBackHeaders": {
@@ -855,48 +1006,135 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 
 
 
-### 输入信息
+#### 输入信息
 
-系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的报表文件。
+与“jasper/getStream”接口“输入信息”内容相同。
 
-注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
-
-以下是输入设置部分：
-
-```json
-	"reportFile":"jzpz/jzpz",
-	"fileNameKey":"voucher_code",
-    "docType": "pdf",
-    "dataSource": "json",
-```
-
-或
-
-```json
-	"reportFile":"jzpz/jzpz",
-    "fileName":"12345",
-    "docType": "pdf",
-    "dataSource": "db",
-```
-
-- reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
-- fileNameKey 或 fileName：必填其一（不可同时存在）。
-  - 本服务允许对一个报表模板，一次传入多组数据，对应生成多个报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
-  - 如果只需要将所有数据生成到一个报表文件中，则需要配置“fileName”，并指定一个文件名。
-- docType：输出报表格式。值可以为：HTML、PDF、Word、Excel、CSV、XML、ODT
-- dataSource：数据源类型。与data中的内容对应。值可以为：json、db。
-
-
-
-### 数据域
+#### 数据域
 
 必填！！
 
-data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
+与“jasper/getStream”接口“数据域”内容相同。
 
-如果数据源类型为“json”，则内容为报表中的实际数据。例如：
+#### 回写信息
+
+本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
+
+##### path
+
+当使用文件路径（Path）方式回写时，配置如下：
 
 ```json
+	"writeBackType": "path",
+	"writeBack": {
+		"path": "D:/data2pdf/pdf/"
+	},
+```
+
+- writeBackType：必填，值为“path”。
+- writeBack：必填。JSON对象，path方式中，key为“path”，value为MP4文件回写的路径。
+
+##### url
+
+当使用http协议上传（url）方式回写时，配置如下：
+
+```json
+	"writeBackType": "url",
+	"writeBack": {
+		"url": "http://localhost/uploadfile.do"
+	},
+	"writeBackHeaders": {
+		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+	},
+```
+
+- writeBackType：必填，值为“url”。
+- writeBack：必填。JSON对象，url方式中，key为“url”，value为业务系统提供的文件上传接口API地址。
+- writeBackHeaders：非必填。如果Web服务器访问时需要设置请求头或Token认证，则需要在此处设置请求头的内容；否则此处可不添加。
+
+##### ftp
+
+当使用FTP服务上传（ftp）方式回写时，配置如下：
+
+```json
+	"writeBackType": "ftp",
+	"writeBack": {
+         "passive": "false",
+		"host": "ftp://localhost",
+         "port": "21",
+         "username": "guest",
+         "password": "guest",
+         "filepath": "/2021/10/"
+	},
+```
+
+- writeBackType：必填，值为“ftp”。
+- writeBack：必填。JSON对象。
+  - passive：是否是被动模式。true/false
+  - host：ftp服务的访问地址。
+  - port：ftp服务的访问端口。
+  - username：ftp服务的用户名。
+  - password：ftp服务的密码。
+  - filepath：文件所在的路径。
+
+#### 回调信息
+
+业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
+
+```json
+	"callBackURL": "http://10.11.12.13/callback.do",
+	"callBackHeaders": {
+		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+	},
+```
+
+- callBackURL：回调接口的URL。回调接口需要接收两个参数：
+  - file：处理后的文件名。本例为“001-online”。
+  - flag：处理后的状态，值为：success 或 error。
+- callBackHeaders：如果回调接口需要在请求头中加入认证信息等，可以在此处设置请求头的参数和值。
+
+接口url示例：
+
+```
+http://10.11.12.13/callback.do?file=001-online&flag=success
+```
+
+#### 返回信息
+
+文件生成、回写过程处理完毕后，接口返回信息示例如下：
+
+```json
+{
+    "flag": "success",
+    "message": "PDF reoprt create success. PDF file write back success. API call back success.",
+    "file": "123.pdf;456.pdf"
+}
+```
+
+- flag：处理状态。success，成功；error，错误，失败。
+- message：返回接口消息。
+- file：生成的文件名列表
+
+
+
+### jasper/getBase64：返回报表文件Base64
+
+传入JSON或数据表查询参数（JSON格式），生成单个报表文件，直接返回文件的Base64字符串。
+
+- 接口地址：http://host:port/jasper/getBase64
+
+- 接口调用方式：POST
+
+- 传入参数形式：JSON
+
+  传入参数示例：
+
+```json
+{
+	"reportFile":"dah/jb-4cm",
+	"fileName":"dahjb",
+    "docType": "pdf",
+    "dataSource": "json",
 	"data":[
     	{
 		    "year": "2022", 
@@ -927,137 +1165,26 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
             "barcode":"1234567894"
     	}
     ]
-```
-
-如果数据源类型为“db”（即使用“数据库查询”类型的报表模板），则data域中可以存放报表模板中设置的参数以及参数值。例如：
-
-```json
-    "data":[
-        {
-            "table": "dat_archive_arc_jh",
-            "where": "1=1",
-            "orderBy": "id"
-        }
-    ]
-```
-
-注意：
-
-- 返回单个文件的Base64的接口中，数据域中只有第一个报表文件的JSON对象有效，会生成PDF后返回Base64字符串。
-- 返回多个文件的Base64的接口中，数据域中可以有多个JSON对象数据。
-
-
-
-### 回写信息
-
-本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
-
-注意：返回Base64接口无此部分回写信息。
-
-当使用文件路径（Path）方式回写时，配置如下：
-
-```json
-	"writeBackType": "path",
-	"writeBack": {
-		"path": "D:/data2pdf/pdf/"
-	},
-```
-
-- writeBackType：必填，值为“path”。
-- writeBack：必填。JSON对象，path方式中，key为“path”，value为MP4文件回写的路径。
-
-当使用http协议上传（url）方式回写时，配置如下：
-
-```json
-	"writeBackType": "url",
-	"writeBack": {
-		"url": "http://localhost/uploadfile.do"
-	},
-	"writeBackHeaders": {
-		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
-	},
-```
-
-- writeBackType：必填，值为“url”。
-- writeBack：必填。JSON对象，url方式中，key为“url”，value为业务系统提供的文件上传接口API地址。
-- writeBackHeaders：非必填。如果Web服务器访问时需要设置请求头或Token认证，则需要在此处设置请求头的内容；否则此处可不添加。
-
-当使用FTP服务上传（ftp）方式回写时，配置如下：
-
-```json
-	"writeBackType": "ftp",
-	"writeBack": {
-         "passive": "false",
-		"host": "ftp://localhost",
-         "port": "21",
-         "username": "guest",
-         "password": "guest",
-         "filepath": "/2021/10/"
-	},
-```
-
-- writeBackType：必填，值为“ftp”。
-- writeBack：必填。JSON对象。
-  - passive：是否是被动模式。true/false
-  - host：ftp服务的访问地址。
-  - port：ftp服务的访问端口。
-  - username：ftp服务的用户名。
-  - password：ftp服务的密码。
-  - filepath：文件所在的路径。
-
-
-
-### 回调信息
-
-业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
-
-注意：返回Base64接口无此部分信息。
-
-```json
-	"callBackURL": "http://10.11.12.13/callback.do",
-	"callBackHeaders": {
-		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
-	},
-```
-
-- callBackURL：回调接口的URL。回调接口需要接收两个参数：
-  - file：处理后的文件名。本例为“001-online”。
-  - flag：处理后的状态，值为：success 或 error。
-- callBackHeaders：如果回调接口需要在请求头中加入认证信息等，可以在此处设置请求头的参数和值。
-
-接口url示例：
-
-```
-http://10.11.12.13/callback.do?file=001-online&flag=success
-```
-
-
-
-### 返回信息
-
-#### 流式接口返回
-
-所有给HTTPReponse返回HTML、PDF流的接口，均可以在浏览器中直接显示。
-
-#### 文件接口返回
-
-所有报表文件接口，在文件生成、回写过程处理完毕后，接口返回信息示例如下：
-
-```json
-{
-    "flag": "success",
-    "message": "PDF reoprt create success. PDF file write back success. API call back success.",
-    "file": "123.pdf;456.pdf"
 }
 ```
 
-- flag：处理状态。success，成功；error，错误，失败。
-- message：返回接口消息。
-- file：生成的文件名列表
+以下分块解释传入参数每部分的内容。
 
-#### 单个报表文件Base64接口返回
 
-所有返回单个报表文件Base64接口，在处理完毕后，返回信息示例如下：
+
+#### 输入信息
+
+与“jasper/getStream”接口“输入信息”内容相同。
+
+#### 数据域
+
+必填！！
+
+与“jasper/getStream”接口“数据域”内容相同。
+
+#### 返回信息
+
+返回单个报表文件Base64接口，在处理完毕后，返回信息示例如下：
 
 ```
 JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
@@ -1065,9 +1192,191 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 
 - 返回Base64编码后的文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
 
-#### 多个报表文件Base64接口返回
 
-所有返回多个文件Base64接口，在处理完毕后，返回信息示例如下：
+
+### jasper/getBase64s：返回多个报表文件Base64
+
+传入JSON或数据表查询参数（JSON格式），生成多个报表文件，通过JSON返回文件的Base64字符串。
+
+- 接口地址：http://host:port/jasper/getBase64s
+
+- 接口调用方式：POST
+
+- 传入参数形式：JSON
+
+  传入参数示例：
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"jzpz/jzpz",
+	"fileNameKey":"voucher_code",
+    "dataSource": "json",
+    "docType": "pdf",
+	"data":[
+		{
+			"id": "1",
+		    "voucher_code": "20210507SJFBX1234567", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "壹佰元整", 
+		    "debit_sum": "100.00", 
+		    "credit_sum": "100.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "100.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		},
+		{
+			"id": "2",
+		    "voucher_code": "20210507SJFBX1234568", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "陆佰元整", 
+		    "debit_sum": "600.00", 
+		    "credit_sum": "600.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "600.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		}
+	]
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+
+
+#### 输入信息
+
+与“jasper/getStream”接口“输入信息”内容相同。
+
+#### 数据域
+
+必填！！
+
+与“jasper/getStream”接口“数据域”内容相同。
+
+#### 返回信息
+
+返回多个文件Base64接口，在处理完毕后，返回信息示例如下：
 
 ```json
 {
@@ -1091,4 +1400,202 @@ JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5
 - base64
   - filename：文件名
   - base64：文件Base64编码之后的字符串。
+
+
+
+### jasper/put2Mq：数据加入到MQ
+
+传入JSON，加入到MQ队列异步处理，生成单个或多个报表文件，回写到指定位置。
+
+- 接口地址：http://host:port/jasper/put2Mq
+
+- 接口调用方式：POST
+
+- 传入参数形式：JSON
+
+  传入参数示例：
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"jzpz/jzpz",
+	"fileNameKey":"voucher_code",
+    "dataSource": "json",
+    "docType": "pdf",
+    "writeBackType": "path",
+	"writeBack": {
+		"path": "D:/data2pdf/pdf/"
+	},
+    "callBackURL": "http://1234.com/callback.do",
+    "callBackHeaders": {
+		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+	},
+	"data":[
+		{
+			"id": "1",
+		    "voucher_code": "20210507SJFBX1234567", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "壹佰元整", 
+		    "debit_sum": "100.00", 
+		    "credit_sum": "100.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "100.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		},
+		{
+			"id": "2",
+		    "voucher_code": "20210507SJFBX1234568", 
+		    "voucher_company_name": "3000XXXX有限公司", 
+		    "create_date": "2021年08月31日", 
+		    "voucher_number": "6012345234", 
+		    "ac_doc_typ_name": "EMS凭证", 
+		    "total_chn": "陆佰元整", 
+		    "debit_sum": "600.00", 
+		    "credit_sum": "600.00", 
+		    "post_name": "PI_USER",
+		    "pages":2,
+		    "detail":[
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "100.00",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "XXXXX店报销手机费",
+				    "subject_name": "6601000000手机费",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": "600.00"
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				},
+		    	{
+				    "abstract": "",
+				    "subject_name": "",
+				    "debit_amount_lc": "",
+				    "credit_amount_lc": ""
+				}
+		    ]
+		}
+	]
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+
+
+#### 输入信息
+
+与“jasper/getStream”接口“输入信息”内容相同。
+
+#### 数据域
+
+必填！！
+
+与“jasper/getStream”接口“数据域”内容相同。
+
+#### 回写信息
+
+与“jasper/getFile”接口“回写信息”内容相同。
+
+#### 回调信息
+
+与“jasper/getFile”接口“回调信息”内容相同。
 
