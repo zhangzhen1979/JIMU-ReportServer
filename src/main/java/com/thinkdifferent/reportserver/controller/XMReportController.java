@@ -7,9 +7,11 @@ package com.thinkdifferent.reportserver.controller;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thinkdifferent.reportserver.config.ReportServerConfig;
 import com.thinkdifferent.reportserver.sharescript.ShareScriptManagerService;
 import com.thinkdifferent.reportserver.template.TemplateManagerService;
 import com.thinkdifferent.reportserver.util.IOUtils;
+import com.thinkdifferent.reportserver.util.WriteBackUtil;
 import net.sf.json.JSONObject;
 import org.mosmith.tools.report.engine.execute.context.ExecuteContext;
 import org.mosmith.tools.report.engine.execute.script.javascript.JSContextAware;
@@ -18,15 +20,17 @@ import org.mosmith.tools.report.engine.output.ReportHelper;
 import org.mosmith.tools.report.engine.util.StringUtils;
 import org.mozilla.javascript.Context;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -36,13 +40,13 @@ import java.util.regex.Pattern;
  *
  * @author Administrator
  */
-@Controller
+@RestController
 @RequestMapping("/report")
 public class XMReportController {
     
     private static final String DATA="data";
     private static final String CODE="code";
-    
+
     @Autowired
     TemplateManagerService templateManagerService;
     
@@ -64,30 +68,25 @@ public class XMReportController {
             docType=httpServletRequest.getParameter("docType");
         }
 
-        createReport(templateId, templateData,
+        File file = createReport(templateId, templateData,
                 previewDataJson, previewOptions, docType,
                 httpServletResponse);
-    }
 
-    @PostMapping("/getReport")
-    public void getReport(@RequestBody JSONObject jsonInput, HttpServletResponse httpServletResponse) throws Exception {
-        String previewOptionsJson = "{\"docType\": \"PDF\",\"dividePage\": true}";
-        // 获取reportFile中的值作为“报表模板ID”。即为template表中的F_id字段的值，形如：template-e7e2ad60-596b-41d4-80f8-65991da9049a
-        String templateId = jsonInput.getString("reportFile");
-        // 获取“预览数据”
-        String previewDataJson = jsonInput.toString();
-        // 获取options中的值，作为“预览参数”。形如：{"docType":"PDF","dividePage":true}
-        if(jsonInput.has("options")){
-            previewOptionsJson = jsonInput.getJSONObject("options").toString();
+        InputStream fileIs=null;
+        try {
+            fileIs=new FileInputStream(file);
+            OutputStream os=httpServletResponse.getOutputStream();
+            IOUtils.copyStream(fileIs, os);
+        } finally {
+            IOUtils.close(fileIs);
+            if(file!=null) {
+                file.delete();
+            }
         }
 
-        Map<String, Object> previewOptions=(Map<String, Object>) readJson(previewOptionsJson);
-        String docType=StringUtils.nonull(previewOptions.get("docType"));
 
-        createReport(templateId, null,
-                previewDataJson, previewOptions, docType,
-                httpServletResponse);
     }
+
 
     /**
      * 根据传入的参数，创建报表文件
@@ -99,7 +98,7 @@ public class XMReportController {
      * @param httpServletResponse HTTP响应对象
      * @throws Exception
      */
-    private void createReport(String templateId, String templateData,
+    private File createReport(String templateId, String templateData,
                               String previewDataJson, Map<String, Object> previewOptions, String docType,
                               HttpServletResponse httpServletResponse)
             throws Exception{
@@ -150,22 +149,147 @@ public class XMReportController {
             contentType="application/pdf";
         }
 
-        InputStream fileIs=null;
-        try {
+        if(httpServletResponse != null){
             httpServletResponse.setContentType(contentType);
             httpServletResponse.setHeader("Content-Disposition", "inline;filename=" + fileName);
+        }
 
+        return file;
+
+    }
+
+    /**
+     * 根据传入的参数（模板ID），生成报表文件，根据需要，返回HTTP响应
+     * @param jsonInput 输入的JSON对象
+     * @param httpServletResponse HTTP响应
+     * @return 报表文件对象
+     * @throws Exception
+     */
+    private File getFileByID(JSONObject jsonInput, HttpServletResponse httpServletResponse)
+            throws Exception {
+        String previewOptionsJson = "{\"docType\": \"PDF\",\"dividePage\": true}";
+        // 获取reportFile中的值作为“报表模板ID”。即为template表中的F_id字段的值，形如：template-e7e2ad60-596b-41d4-80f8-65991da9049a
+        String templateId = jsonInput.getString("reportFile");
+        // 获取“预览数据”
+        String previewDataJson = jsonInput.toString();
+        // 获取options中的值，作为“预览参数”。形如：{"docType":"PDF","dividePage":true}
+        if(jsonInput.has("options")){
+            previewOptionsJson = jsonInput.getJSONObject("options").toString();
+        }
+
+        Map<String, Object> previewOptions=(Map<String, Object>) readJson(previewOptionsJson);
+        String docType=StringUtils.nonull(previewOptions.get("docType"));
+
+        File file = createReport(templateId, null,
+                previewDataJson, previewOptions, docType,
+                httpServletResponse);
+
+        String strFileExt = docType;
+        if(docType.equalsIgnoreCase("Word")) {
+            strFileExt="docx";
+        }else if(docType.equalsIgnoreCase("Excel")) {
+            strFileExt="xlsx";
+        }else if(docType.equalsIgnoreCase("Image")) {
+            strFileExt="png";
+        }
+
+        String strFileName = "temp."+strFileExt;
+        if (jsonInput.has("fileName") && jsonInput.get("fileName") != null) {
+            strFileName = jsonInput.getString("fileName") + "." + strFileExt;
+        }
+
+        String strDest = ReportServerConfig.outPutPath + strFileName;
+        if("path".equalsIgnoreCase(jsonInput.getString("writeBackType"))){
+            String strDestPath = jsonInput.getJSONObject("writeBack").getString("path");
+            strDestPath = strDestPath.replaceAll("\\\\", "/");
+            if(!strDestPath.endsWith("/")){
+                strDestPath = strDestPath + "/";
+            }
+            strDest = strDestPath + strFileName;
+        }
+
+        File fileDest = new File(strDest);
+        Files.copy(file.toPath(), fileDest.toPath());
+        file.delete();
+
+        return fileDest;
+    }
+
+
+    /**
+     * 根据传入的JSON数据，给HTTP请求返回报表文件
+     * @param jsonInput 传入的JSON数据
+     * @param httpServletResponse HTTP响应
+     * @throws Exception
+     */
+    @PostMapping("/getReport")
+    public void getReport(@RequestBody JSONObject jsonInput, HttpServletResponse httpServletResponse) throws Exception {
+        File file = getFileByID(jsonInput, httpServletResponse);
+
+        InputStream fileIs=null;
+        try {
             fileIs=new FileInputStream(file);
             OutputStream os=httpServletResponse.getOutputStream();
             IOUtils.copyStream(fileIs, os);
         } finally {
             IOUtils.close(fileIs);
             if(file!=null) {
-                boolean deleted=file.delete();
+                file.delete();
             }
         }
 
     }
+
+    /**
+     * 根据传入的JSON数据，生成报表文件，并回写到指定位置
+     * @param jsonInput
+     * @throws Exception
+     */
+    @PostMapping("/getReportFile")
+    public JSONObject getReportFile(@RequestBody JSONObject jsonInput) throws Exception {
+        // 生成报表文件
+        File file = getFileByID(jsonInput, null);
+
+        JSONObject jsonFile = new JSONObject();
+        if(file.exists()){
+            jsonFile.put("flag", "success");
+            jsonFile.put("file", file.getCanonicalPath());
+        }
+
+        boolean blnSuccess = WriteBackUtil.writeBack(jsonInput, jsonFile);
+        JSONObject jsonReturn = new JSONObject();
+        if(blnSuccess){
+            jsonReturn.put("flag", "success" );
+            jsonReturn.put("message", "Report file write back success. API call back success." );
+        }else{
+            jsonReturn.put("flag", "error" );
+            jsonReturn.put("message", "Report file write back error. OR API call back error." );
+        }
+        jsonReturn.put("file", file.getCanonicalPath());
+
+        return jsonReturn;
+    }
+
+    /**
+     * 根据传入的JSON数据，生成报表文件，并返回Base64字符串
+     * @param jsonInput
+     * @throws Exception
+     */
+    @PostMapping("/getReportBase64")
+    public String getReportBase64(@RequestBody JSONObject jsonInput) throws Exception {
+        // 生成报表文件
+        File file = getFileByID(jsonInput, null);
+
+        if(file.exists()){
+            byte[] b = Files.readAllBytes(Paths.get(file.getCanonicalPath()));
+            // 转换为byte后，PDF文件即可删除
+            file.delete();
+            return Base64.getEncoder().encodeToString(b);
+        }
+
+        return null;
+    }
+
 
     private ReportHelper getReportHelper() {
         ReportHelper reportHelper=new ReportHelper();

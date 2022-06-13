@@ -26,7 +26,7 @@ public class WriteBackUtil {
          * {
          *      "flag": "success",
          *      "message": "Create Pdf Report file Success",
-         *      "file": "d:/pdf/001.pdf
+         *      "file": "d:/pdf/001.pdf"
          * }
          */
 
@@ -35,109 +35,113 @@ public class WriteBackUtil {
             if("success".equalsIgnoreCase(jsonReturn.getString("flag"))){
                 // 获取转换后的PDF文件的路径和文件名
                 String strPdfFilePathName = jsonReturn.getString("file");
-                File filePDF = new File(strPdfFilePathName);
-                String strPdfFileName = filePDF.getName();
-                strPdfFileName = strPdfFileName.substring(0, strPdfFileName.lastIndexOf("."));
+                String[] strPdfs = strPdfFilePathName.split(";");
 
+                for(int i=0; i<strPdfs.length; i++){
+                    File filePDF = new File(strPdfs[i]);
+                    String strPdfFileName = filePDF.getName();
+                    strPdfFileName = strPdfFileName.substring(0, strPdfFileName.lastIndexOf("."));
 
-                // 文件回写方式（回写路径[path]/回写接口[api]/ftp回写[ftp]）
-                String strWriteBackType = "path";
-                JSONObject jsonWriteBack = new JSONObject();
-                if(jsonInput.get("writeBackType")!=null){
-                    strWriteBackType = String.valueOf(jsonInput.get("writeBackType"));
-                    // 回写接口或回写路径
-                    jsonWriteBack = JSONObject.fromObject(jsonInput.get("writeBack"));
-                }
-
-                if(!"path".equalsIgnoreCase(strWriteBackType)){
-                    boolean blnFlag = false;
-
-                    // 回写文件
-                    Map mapWriteBackHeaders = new HashMap<>();
-                    if(jsonInput.get("writeBackHeaders") != null){
-                        mapWriteBackHeaders = (Map)jsonInput.get("writeBackHeaders");
+                    // 文件回写方式（回写路径[path]/回写接口[api]/ftp回写[ftp]）
+                    String strWriteBackType = "path";
+                    JSONObject jsonWriteBack = new JSONObject();
+                    if(jsonInput.get("writeBackType")!=null){
+                        strWriteBackType = String.valueOf(jsonInput.get("writeBackType"));
+                        // 回写接口或回写路径
+                        jsonWriteBack = JSONObject.fromObject(jsonInput.get("writeBack"));
                     }
 
-                    if("url".equalsIgnoreCase(strWriteBackType)){
-                        // 调用REST API上传文件回写
-                        String strWriteBackURL = jsonWriteBack.getString("url");
-                        jsonReturn = writeBack2Api(strPdfFilePathName, strWriteBackURL, mapWriteBackHeaders);
-                    }else if("ftp".equalsIgnoreCase(strWriteBackType)){
-                        // ftp回写
-                        boolean blnPassive = jsonWriteBack.getBoolean("passive");
-                        String strFtpHost = jsonWriteBack.getString("host");
-                        int intFtpPort = jsonWriteBack.getInt("port");
-                        String strFtpUserName = jsonWriteBack.getString("username");
-                        String strFtpPassWord = jsonWriteBack.getString("password");
-                        String strFtpFilePath = jsonWriteBack.getString("filepath");
+                    if(!"path".equalsIgnoreCase(strWriteBackType)){
+                        boolean blnFlag = false;
 
-                        boolean blnFptSuccess = false;
-                        FileInputStream in=new FileInputStream(filePDF);
+                        // 回写文件
+                        Map mapWriteBackHeaders = new HashMap<>();
+                        if(jsonInput.get("writeBackHeaders") != null){
+                            mapWriteBackHeaders = (Map)jsonInput.get("writeBackHeaders");
+                        }
 
-                        Ftp ftp = null;
-                        try {
-                            if(blnPassive){
-                                // 服务器需要代理访问，才能对外访问
-                                FtpConfig ftpConfig = new FtpConfig(strFtpHost, intFtpPort,
-                                        strFtpUserName, strFtpPassWord,
-                                        CharsetUtil.CHARSET_UTF_8);
-                                ftp = new Ftp(ftpConfig, FtpMode.Passive);
-                            }else{
-                                // 服务器不需要代理访问
-                                ftp = new Ftp(strFtpHost, intFtpPort,
-                                        strFtpUserName, strFtpPassWord);
-                            }
+                        if("url".equalsIgnoreCase(strWriteBackType)){
+                            // 调用REST API上传文件回写
+                            String strWriteBackURL = jsonWriteBack.getString("url");
+                            jsonReturn = writeBack2Api(strPdfs[i], strWriteBackURL, mapWriteBackHeaders);
+                        }else if("ftp".equalsIgnoreCase(strWriteBackType)){
+                            // ftp回写
+                            boolean blnPassive = jsonWriteBack.getBoolean("passive");
+                            String strFtpHost = jsonWriteBack.getString("host");
+                            int intFtpPort = jsonWriteBack.getInt("port");
+                            String strFtpUserName = jsonWriteBack.getString("username");
+                            String strFtpPassWord = jsonWriteBack.getString("password");
+                            String strFtpFilePath = jsonWriteBack.getString("filepath");
 
-                            blnFptSuccess =  ftp.upload(strFtpFilePath, filePDF.getName(), in);
+                            boolean blnFptSuccess = false;
+                            FileInputStream in=new FileInputStream(filePDF);
 
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        } finally {
+                            Ftp ftp = null;
                             try {
-                                if (ftp != null) {
-                                    ftp.close();
+                                if(blnPassive){
+                                    // 服务器需要代理访问，才能对外访问
+                                    FtpConfig ftpConfig = new FtpConfig(strFtpHost, intFtpPort,
+                                            strFtpUserName, strFtpPassWord,
+                                            CharsetUtil.CHARSET_UTF_8);
+                                    ftp = new Ftp(ftpConfig, FtpMode.Passive);
+                                }else{
+                                    // 服务器不需要代理访问
+                                    ftp = new Ftp(strFtpHost, intFtpPort,
+                                            strFtpUserName, strFtpPassWord);
                                 }
 
-                                if(in != null){
-                                    in.close();
-                                }
-                            } catch (IOException e) {
+                                blnFptSuccess =  ftp.upload(strFtpFilePath, filePDF.getName(), in);
+
+                            } catch (Exception e) {
                                 e.printStackTrace();
+                            } finally {
+                                try {
+                                    if (ftp != null) {
+                                        ftp.close();
+                                    }
+
+                                    if(in != null){
+                                        in.close();
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+
+                            if(blnFptSuccess){
+                                blnFlag = true;
+                            }
+
+                        }
+
+                        // 不是直接写入路径（path），则存储在本地文件夹中的pdf文件都是临时文件，需要在传输后删除
+                        if(blnFlag){
+                            if(filePDF.exists()){
+                                filePDF.delete();
                             }
                         }
 
+                        // 回调对方系统提供的CallBack方法。
+                        if(jsonInput.get("callBackURL")!=null){
+                            String strCallBackURL = String.valueOf(jsonInput.get("callBackURL"));
 
-                        if(blnFptSuccess){
-                            blnFlag = true;
+                            Map mapCallBackHeaders = new HashMap<>();
+                            if (jsonInput.get("callBackHeaders") != null) {
+                                mapCallBackHeaders = (Map) jsonInput.get("callBackHeaders");
+                            }
+
+                            Map mapParams = new HashMap<>();
+                            mapParams.put("file", strPdfFileName);
+                            if(blnFlag){
+                                mapParams.put("flag", "success");
+                            }else{
+                                mapParams.put("flag", "error");
+                            }
+
+                            callBack(strCallBackURL, mapCallBackHeaders, mapParams);
                         }
 
-                    }
-
-                    // 不是直接写入路径（path），则存储在本地文件夹中的pdf文件都是临时文件，需要在传输后删除
-                    if(blnFlag){
-                        if(filePDF.exists()){
-                            filePDF.delete();
-                        }
-                    }
-
-                    // 回调对方系统提供的CallBack方法。
-                    if(jsonInput.get("callBackURL")!=null){
-                        String strCallBackURL = String.valueOf(jsonInput.get("callBackURL"));
-
-                        Map mapCallBackHeaders = new HashMap<>();
-                        if (jsonInput.get("callBackHeaders") != null) {
-                            mapCallBackHeaders = (Map) jsonInput.get("callBackHeaders");
-                        }
-
-                        Map mapParams = new HashMap<>();
-                        mapParams.put("file", strPdfFileName);
-                        if(blnFlag){
-                            mapParams.put("flag", "success");
-                        }else{
-                            mapParams.put("flag", "error");
-                        }
-
-                        callBack(strCallBackURL, mapCallBackHeaders, mapParams);
                     }
 
                 }

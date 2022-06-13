@@ -182,6 +182,8 @@ reportserver:
 
 ## XMReport引擎使用说明
 
+### “模板查询”接口
+
 使用报表前，需要先在desinger中配置报表模板，并保存。
 
 可以利用接口查询系统中的报表模板的信息：
@@ -210,17 +212,17 @@ reportserver:
 
 
 
+### “报表预览”接口
+
 报表预览接口：提供REST接口供外部系统调用，可直接生成各种格式报表。
 
 - 接口地址：http://host:port/report/getReport
 - 接口调用方式：POST
 - 传入参数形式：JSON
 
-读取数据库生成报表
 
 
-
-### JSON生成报表
+#### JSON生成报表
 
 传入参数示例：
 
@@ -268,7 +270,7 @@ reportserver:
 
 
 
-#### 报表信息
+##### 报表信息
 
 ```json
 	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
@@ -280,13 +282,13 @@ reportserver:
 
 - reportFile：必填。报表模板ID。可从前述接口的结果中获得。
 - options：必填。报表生成参数。
-  - docType：预览格式，包括：PDF、DOCX、XLSX、HTML、PNG
+  - docType：预览格式，包括：PDF、Word、Excel、HTML、Image
   - dividePage：分页。当预览格式为PDF、PNG时，此项默认为true；当为其他格式时，可以选择分页（true）或不分页（false）。
 
 
 
 
-#### 数据域
+##### 数据域
 
 必填！！
 
@@ -306,13 +308,13 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 
 
-#### 返回信息
+##### 返回信息
 
 此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
 
 
 
-### 查询数据库生成报表
+#### 查询数据库生成报表
 
 传入参数示例：
 
@@ -334,7 +336,7 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 
 
-#### 报表信息
+##### 报表信息
 
 ```json
 	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
@@ -351,7 +353,7 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 
 
-#### SQL参数
+##### SQL参数
 
 必填！！
 
@@ -377,7 +379,199 @@ SQL参数为传送给报表模板的核心值，内容按照报表中的实际�
 
 
 
-#### 返回信息
+##### 返回信息
+
+此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
+
+
+
+### “生成报表文件并回写”接口
+
+系统提供生成报表文件，并根据传入的参数要求，将文件回写到指定位置的功能。
+
+- 接口地址：http://host:port/report/getReportFile
+- 接口调用方式：POST
+- 传入参数形式：JSON
+
+本例以“JSON生成报表”为例说明如何使用本接口；“查询数据库生成报表”的参数内容，可参考前述章节的说明，结合本章节内容组装。
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"template-e7e2ad60-596b-41d4-80f8-65991da9049a",
+	"fileName":"arcList",
+    "writeBackType": "path",
+    "writeBack":{
+        "path":"D:/data2pdf/pdf/"
+    },
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+    		"barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+    		"barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+    		"barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+    		"barcode":"1234567894"
+    	}
+    ],
+    "options": {
+        "docType": "PDF",
+        "dividePage": true
+    }
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+
+
+##### 报表信息
+
+```json
+	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
+   	"options": {
+        "docType": "PDF",
+        "dividePage": true
+    }
+```
+
+- reportFile：必填。报表模板ID。可从前述接口的结果中获得。
+- options：必填。报表生成参数。
+  - docType：预览格式，包括：PDF、Word、Excel、HTML、Image
+  - dividePage：分页。当预览格式为PDF、PNG时，此项默认为true；当为其他格式时，可以选择分页（true）或不分页（false）。
+
+
+
+
+##### 数据域
+
+必填！！
+
+data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。例如：
+
+```json
+    "data": [
+        {
+            "year": "2022",
+            "fonds": "维森集团",
+            "retention": "30年",
+            "box_no": "0001",
+            "barcode": "1234567891"
+        }
+    ],
+```
+
+
+
+##### 回写信息
+
+本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
+
+注意：返回Base64接口无此部分回写信息。
+
+当使用文件路径（Path）方式回写时，配置如下：
+
+```json
+	"fileName": "arcList",
+	"writeBackType": "path",
+	"writeBack": {
+		"path": "D:/data2pdf/pdf/"
+	},
+```
+
+- fileName：输出的报表文件名。（不包含扩展名，系统会自动根据选择的输出格式，自动组装扩展名）
+- writeBackType：必填，值为“path”。
+- writeBack：必填。JSON对象，path方式中，key为“path”，value为MP4文件回写的路径。
+
+当使用http协议上传（url）方式回写时，配置如下：
+
+```json
+	"writeBackType": "url",
+	"writeBack": {
+		"url": "http://localhost/uploadfile.do"
+	},
+	"writeBackHeaders": {
+		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+	},
+```
+
+- writeBackType：必填，值为“url”。
+- writeBack：必填。JSON对象，url方式中，key为“url”，value为业务系统提供的文件上传接口API地址。
+- writeBackHeaders：非必填。如果Web服务器访问时需要设置请求头或Token认证，则需要在此处设置请求头的内容；否则此处可不添加。
+
+当使用FTP服务上传（ftp）方式回写时，配置如下：
+
+```json
+	"writeBackType": "ftp",
+	"writeBack": {
+         "passive": "false",
+		"host": "ftp://localhost",
+         "port": "21",
+         "username": "guest",
+         "password": "guest",
+         "filepath": "/2021/10/"
+	},
+```
+
+- writeBackType：必填，值为“ftp”。
+- writeBack：必填。JSON对象。
+  - passive：是否是被动模式。true/false
+  - host：ftp服务的访问地址。
+  - port：ftp服务的访问端口。
+  - username：ftp服务的用户名。
+  - password：ftp服务的密码。
+  - filepath：文件所在的路径。
+
+
+
+##### 回调信息
+
+业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
+
+注意：返回Base64接口无此部分信息。
+
+```json
+	"callBackURL": "http://10.11.12.13/callback.do",
+	"callBackHeaders": {
+		"Authorization": "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0"
+	},
+```
+
+- callBackURL：回调接口的URL。回调接口需要接收两个参数：
+  - file：处理后的文件名。本例为“001-online”。
+  - flag：处理后的状态，值为：success 或 error。
+- callBackHeaders：如果回调接口需要在请求头中加入认证信息等，可以在此处设置请求头的参数和值。
+
+接口url示例：
+
+```
+http://10.11.12.13/callback.do?file=001-online&flag=success
+```
+
+
+
+##### 返回信息
 
 此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
 
