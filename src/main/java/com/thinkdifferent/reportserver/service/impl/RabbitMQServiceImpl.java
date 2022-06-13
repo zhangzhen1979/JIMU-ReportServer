@@ -41,7 +41,32 @@ public class RabbitMQServiceImpl implements RabbitMQService , RabbitTemplate.Con
         try{
             // 将传入的数据JSON，放入到MQ服务器的receive队列中。
             CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EXECHANGE_RECEIVE, RabbitMQConfig.ROUTING_RECEIVE,
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXECHANGE_JASPER, RabbitMQConfig.ROUTING_JASPER,
+                    jsonInput.toString(), correlationId);
+
+            long longEndTime = System.currentTimeMillis();    //获取结束时间
+
+            log.info("数据JSON发送成功！ID:"+correlationId.getId()+"， 耗时："+(longEndTime - longStartTime)+" ms");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+    }
+
+
+    /**
+     * 将传入的JSON对象，转换为PDF文件，输出到指定的目录中。
+     * @param jsonInput 输入的JSON数据对象
+     */
+    public void  setXMData2MQ(JSONObject jsonInput) {
+        // 获取开始时间
+        long longStartTime = System.currentTimeMillis();
+
+        try{
+            // 将传入的数据JSON，放入到MQ服务器的receive队列中。
+            CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXECHANGE_XM, RabbitMQConfig.ROUTING_XM,
                     jsonInput.toString(), correlationId);
 
             long longEndTime = System.currentTimeMillis();    //获取结束时间

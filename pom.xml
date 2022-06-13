@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.thinkdifferent</groupId>
     <artifactId>reportserver</artifactId>
-    <version>0.6</version>
+    <version>1.0</version>
     <name>reportserver</name>
     <description>Data to PDF Report</description>
     <properties>

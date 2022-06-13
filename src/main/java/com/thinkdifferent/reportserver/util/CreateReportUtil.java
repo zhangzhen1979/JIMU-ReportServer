@@ -11,34 +11,64 @@ import net.sf.json.JSONObject;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class CreatePdfUtil {
+public class CreateReportUtil {
+
+    /**
+     * 从输入参数中，获取dataSource的值
+     * @param jsonInput 输入参数
+     * @return dataSource值
+     */
+    public String getDataSource(JSONObject jsonInput){
+        String strDataSource = "json";
+        if(jsonInput.has("dataSource") &&
+                !jsonInput.getString("dataSource").isEmpty()){
+            strDataSource = jsonInput.getString("dataSource");
+        }
+        return strDataSource;
+    }
 
     /**
      * JSON、DB数据生成报表
-     * @param createReportParamEntity 生成报表传入参数
+     * @param reportParamEntity 生成报表传入参数
      * @return
      * @throws Exception
      */
-    public JSONObject createReportFromData(ReportParamEntity createReportParamEntity)
+    public JSONObject createReportFromData(ReportParamEntity reportParamEntity)
             throws Exception{
         JSONObject jsonReturn = new JSONObject();
         jsonReturn.put("flag", "error" );
         jsonReturn.put("message", "Create Report file Error" );
 
         // 报表文件路径和文件名（相对路径、文件名，不包含扩展名）
-        String strReportFile = createReportParamEntity.getJoData().getString("reportFile");
+        String strReportFile = reportParamEntity.getJoInput().getString("reportFile");
         // 将输入路径中的\全部换为/
         strReportFile = strReportFile.replaceAll("\\\\", "/");
         // 获取报表路径（相对路径名）
         String strReportPath = strReportFile.substring(0, strReportFile.lastIndexOf("/")+1);
         if(strReportPath.startsWith("/")){
-            strReportPath = strReportPath.substring(1, strReportPath.length());
+            strReportPath = strReportPath.substring(1);
+        }
+        reportParamEntity.setReportPath(strReportPath);
+
+        String strDocType = "pdf";
+        if(reportParamEntity.getJoInput().has("docType") &&
+                !reportParamEntity.getJoInput().getString("docType").isEmpty() ){
+            strDocType = reportParamEntity.getJoInput().getString("docType");
+        }
+        reportParamEntity.setDocType(strDocType);
+
+        String strFileExt = strDocType;
+        if("word".equalsIgnoreCase(strDocType)){
+            strFileExt = "docx";
+        }else if("excel".equalsIgnoreCase(strDocType)) {
+            strFileExt = "xlsx";
         }
 
         String strWriteBackType = "path";
@@ -57,18 +87,21 @@ public class CreatePdfUtil {
 
         // 按照数据，生成多个PDF文件：报表文件名对应的JSON中的key
         String strFileNameKey = null;
-        if(createReportParamEntity.getJoData().has("fileNameKey")){
-            strFileNameKey = createReportParamEntity.getJoData().getString("fileNameKey");
+        if(reportParamEntity.getJoInput().has("fileNameKey")){
+            strFileNameKey = reportParamEntity.getJoInput().getString("fileNameKey");
         }
         // 或者，生成一个PDF文件：获取PDF文件名
         String strOutFileName = null;
-        if(createReportParamEntity.getJoData().has("fileName")){
-            strOutFileName = createReportParamEntity.getJoData().getString("fileName");
+        if(reportParamEntity.getJoInput().has("fileName")){
+            strOutFileName = reportParamEntity.getJoInput().getString("fileName");
         }
 
         JSONArray jaData = null;
-        if(createReportParamEntity.getJoData().has("data")) {
-            jaData = createReportParamEntity.getJoData().getJSONArray("data");
+        if(reportParamEntity.getJoInput().has("data")) {
+            jaData = reportParamEntity.getJoInput().getJSONArray("data");
+            if(jaData !=null && !jaData.isEmpty()){
+                reportParamEntity.setJaData(jaData);
+            }
         }
 
         // 获取报表模板文件流。
@@ -76,6 +109,7 @@ public class CreatePdfUtil {
         InputStream jasperStream = new FileInputStream(strReportPathFileName);
         // 加载报表模板
         JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
+        reportParamEntity.setJasperReport(jasperReport);
 
         if(jasperStream != null){
             jasperStream.close();
@@ -84,46 +118,20 @@ public class CreatePdfUtil {
         //报表文件临时存储设置，切记！！此临时文件夹一定要真实存在！！！
         JRFileVirtualizer jrFileVirtualizer = new JRFileVirtualizer(2, "cacheDir");
         jrFileVirtualizer.setReadOnly(true);
-
-        // 拼装自定义参数对象
-        ReportParamEntity reportParamEntity = new ReportParamEntity();
-        reportParamEntity.setOutputType(createReportParamEntity.getOutputType());
-        reportParamEntity.setReportPath(strReportPath);
         reportParamEntity.setJrFileVirtualizer(jrFileVirtualizer);
-        reportParamEntity.setData2PdfService(createReportParamEntity.getData2PdfService());
-        reportParamEntity.setJasperReport(jasperReport);
-        reportParamEntity.setResponse(createReportParamEntity.getResponse());
-        reportParamEntity.setDataSource(createReportParamEntity.getDataSource());
-        if("db".equalsIgnoreCase(createReportParamEntity.getDataSource())){
-            reportParamEntity.setConn(createReportParamEntity.getConn());
-            reportParamEntity.setJaTableParams(createReportParamEntity.getJaTableParams());
-        }
 
         String strOutputFileNames = "";
         String strBase64 = "";
         JSONArray jaBase64 = new JSONArray();
 
-        if("html".equalsIgnoreCase(reportParamEntity.getOutputType())){
-            // 生成一个HTML报表
-            String strOutputPathFileName = ReportServerConfig.outPutPath+strOutFileName + ".html";
-
-            reportParamEntity.setOutputPathFileName(strOutputPathFileName);
-            if(jaData !=null && !jaData.isEmpty()){
-                reportParamEntity.setJaData(jaData);
-            }
-
-            createReport(reportParamEntity, 0);
-        }else if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+        if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleWriteBack".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                 "singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
             // 生成一个PDF报表；否则生成多个PDF报表文件
-            strOutputFileNames = strOutFileName + ".pdf";
-            String strOutputPathFileName = strOutPutPath+strOutputFileNames;
+            strOutputFileNames = strOutFileName + "." + strFileExt;
+            String strOutputPathFileName = strOutPutPath + strOutputFileNames;
 
             reportParamEntity.setOutputPathFileName(strOutputPathFileName);
-            if(jaData !=null && !jaData.isEmpty()){
-                reportParamEntity.setJaData(jaData);
-            }
 
             strBase64 = createReport(reportParamEntity, 0);
             if(strBase64 !=null && !"".equals(strBase64)){
@@ -131,6 +139,11 @@ public class CreatePdfUtil {
                 joBase64.put("value", strBase64);
 
                 jaBase64.add(joBase64);
+
+                File file = new File(strOutputPathFileName);
+                if(file.exists()){
+                    file.delete();
+                }
             }
         }else{
             // 读取JSON的data域中的内容。此部分是JSONArray，可以存放多组报表的数据。通过循环一次生成多张报表。
@@ -138,7 +151,7 @@ public class CreatePdfUtil {
                 reportParamEntity.setJoData(jaData.getJSONObject(i));
 
                 // 从指定的key中取值，设定新生成的PDF报表的文件名
-                String strFileName = jaData.getJSONObject(i).getString(strFileNameKey)+".pdf";
+                String strFileName = jaData.getJSONObject(i).getString(strFileNameKey) + "." + strFileExt;
                 // 设定pdf输出的路径和文件名
                 String strOutputPathFileName = strOutPutPath+strFileName;
 
@@ -153,6 +166,11 @@ public class CreatePdfUtil {
                     joBase64.put("value", strBase64);
 
                     jaBase64.add(joBase64);
+
+                    File file = new File(strOutputPathFileName);
+                    if(file.exists()){
+                        file.delete();
+                    }
                 }
 
                 strOutputFileNames = strOutputFileNames + strOutputPathFileName + ";";
@@ -166,7 +184,7 @@ public class CreatePdfUtil {
         jsonReturn.put("flag", "success" );
         jsonReturn.put("message", "Create Pdf Report file Success." );
         jsonReturn.put("file", strOutputFileNames);
-        if(strBase64 !=null && !"".equals(strBase64)) {
+        if(jaBase64 !=null && !jaBase64.isEmpty()) {
             jsonReturn.put("base64", jaBase64);
         }
 
@@ -194,21 +212,20 @@ public class CreatePdfUtil {
         // 将输入的JSON参数转码为UTF-8，并转换为输入流（避免文字产生乱码）
         InputStream inputStream = null;
         if("json".equalsIgnoreCase(reportParamEntity.getDataSource())){
-            if("html".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
-                    "stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+            if("stream".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                     "singleWriteBack".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
                     "singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
                 inputStream = new ByteArrayInputStream(reportParamEntity.getJaData()
                         .toString().getBytes("UTF-8"));
             }else{
-                inputStream = new ByteArrayInputStream(reportParamEntity.getJoData()
+                inputStream = new ByteArrayInputStream(reportParamEntity.getJoInput()
                         .toString().getBytes("UTF-8"));
             }
             // 以数据流的形式，填充报表数据源
             mapParam.put("JSON_INPUT_STREAM", inputStream);
         }else{
             // 数据库连接方式，获取数据
-            mapParam.putAll(reportParamEntity.getJaTableParams()
+            mapParam.putAll(reportParamEntity.getJaData()
                     .getJSONObject(intIndex));
         }
 
@@ -220,46 +237,17 @@ public class CreatePdfUtil {
         }
         mapParam.put("reportPath", System.getProperty("user.dir") + "/reportfile/" + strReportPath);
 
-        if("json".equalsIgnoreCase(reportParamEntity.getDataSource())) {
-            if("html".equalsIgnoreCase(reportParamEntity.getOutputType())) {
-                reportParamEntity.getData2PdfService().
-                        getJson2HtmlStream(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse(),
-                                reportParamEntity.getOutputPathFileName());
-            // 生成pdf格式的报表文件
-            }else if("stream".equalsIgnoreCase(reportParamEntity.getOutputType())){
-                reportParamEntity.getData2PdfService().
-                        getJson2PdfStream(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse());
-            }else if("singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
-                    "multiBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
-                strBase64 = reportParamEntity.getData2PdfService().
-                        getJson2PdfBase64(mapParam, reportParamEntity.getJasperReport());
-            }else {
-                reportParamEntity.getData2PdfService().
-                        getJson2Pdf(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getOutputPathFileName());
-            }
-
+        if("singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
+                "multiBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
+            strBase64 = reportParamEntity.getData2ReportService().
+                    getReportBase64(mapParam, reportParamEntity.getJasperReport(),
+                            reportParamEntity.getOutputPathFileName(), reportParamEntity.getDocType(),
+                            reportParamEntity.getResponse(), reportParamEntity.getConn());
         }else{
-            if("html".equalsIgnoreCase(reportParamEntity.getOutputType())) {
-                reportParamEntity.getData2PdfService().
-                        getDb2HtmlStream(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse(),
-                                reportParamEntity.getOutputPathFileName(),
-                                reportParamEntity.getConn());
-            // 生成pdf格式的报表文件
-            }else if("stream".equalsIgnoreCase(reportParamEntity.getOutputType())){
-                reportParamEntity.getData2PdfService().
-                        getDb2PdfStream(mapParam, reportParamEntity.getJasperReport(), reportParamEntity.getResponse(),
-                                reportParamEntity.getConn());
-            }else if("singleBase64".equalsIgnoreCase(reportParamEntity.getOutputType()) ||
-                    "multiBase64".equalsIgnoreCase(reportParamEntity.getOutputType())){
-                strBase64 = reportParamEntity.getData2PdfService().
-                        getDb2PdfBase64(mapParam, reportParamEntity.getJasperReport(),
-                                reportParamEntity.getConn());
-            }else {
-                reportParamEntity.getData2PdfService().
-                        getDb2Pdf(mapParam, reportParamEntity.getJasperReport(),
-                                reportParamEntity.getOutputPathFileName(),
-                                reportParamEntity.getConn());
-            }
+            reportParamEntity.getData2ReportService().
+                    getReportFile(mapParam, reportParamEntity.getJasperReport(),
+                            reportParamEntity.getOutputPathFileName(), reportParamEntity.getDocType(),
+                            reportParamEntity.getResponse(), reportParamEntity.getConn());
         }
 
         if(inputStream != null){

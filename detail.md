@@ -12,10 +12,10 @@
 ## 简介
 
 - 本服务用于将JSON数据生成报表、将报表模板中设置的SQL查询结果生成报表。
-- 支持生成PDF文件，支持回写到指定位置；支持直接返回HTTP Reponse。
+- 支持生成各种格式报表文件，支持回写到指定位置；支持直接返回HTTP Reponse。
 - 本服务集成了XMReport、JasperReport两个开源报表引擎，分别针对不同场景
   - XMReport支持通过Web方式在线设置报表模板，可以提供在线生成报表预览的能力，支持输出多种文件格式的报表。此引擎适合制作传统的（纵向输出）列表、卡片、单据等。
-  - JasperReport需要使用JasperReport Studio编制报表。支持所有类型的报表编制，包括：（纵向输出）列表、卡片、单据，还支持横向输出的报表（例如：档案盒脊背）。并且其采用独立的缓存机制，报表生成效率更高。（此引擎支持生成PDF文件并回写）
+  - JasperReport需要使用JasperReport Studio编制报表。支持所有类型的报表编制，包括：（纵向输出）列表、卡片、单据，还支持横向输出的报表（例如：档案盒脊背）。并且其采用独立的缓存机制，报表生成效率更高。（此引擎支持生成报表文件并回写）
 
 
 
@@ -212,19 +212,17 @@ reportserver:
 
 
 
-### “报表预览”接口
+### “生成报表”接口
 
-报表预览接口：提供REST接口供外部系统调用，可直接生成各种格式报表。
+提供REST接口供外部系统调用，可直接生成各种格式报表。
 
-- 接口地址：http://host:port/report/getReport
+- 接口地址：http://host:port/report/getStream
+
 - 接口调用方式：POST
+
 - 传入参数形式：JSON
 
-
-
-#### JSON生成报表
-
-传入参数示例：
+  传入参数示例：
 
 ```JSON
 {
@@ -270,7 +268,7 @@ reportserver:
 
 
 
-##### 报表信息
+#### 报表信息
 
 ```json
 	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
@@ -288,7 +286,7 @@ reportserver:
 
 
 
-##### 数据域
+#### 数据域
 
 必填！！
 
@@ -306,58 +304,7 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
     ],
 ```
 
-
-
-##### 返回信息
-
-此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
-
-
-
-#### 查询数据库生成报表
-
-传入参数示例：
-
-```JSON
-{
-    "reportFile": "template-2c343377-c779-4af9-9a80-8cab37f09e83",
-    "fields": "filing_year,fonds_no,retention,piece_no",
-    "table": "dat_archive_arc_jh",
-    "where": "1=1",
-    "orderBy": "id",
-    "options": {
-        "docType": "PDF",
-        "dividePage": true
-    }
-}
-```
-
-以下分块解释传入参数每部分的内容。
-
-
-
-##### 报表信息
-
-```json
-	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
-   	"options": {
-        "docType": "PDF",
-        "dividePage": true
-    }
-```
-
-- reportFile：必填。报表模板ID。可从前述接口的结果中获得。
-- options：必填。报表生成参数。
-  - docType：预览格式，包括：PDF、DOCX、XLSX、HTML、PNG
-  - dividePage：分页。当预览格式为PDF、PNG时，此项默认为true；当为其他格式时，可以选择分页（true）或不分页（false）。
-
-
-
-##### SQL参数
-
-必填！！
-
-SQL参数为传送给报表模板的核心值，内容按照报表中的实际设置而定。例如：
+如果报表是通过数据库查询生成，则数据域为sql参数（无需data标签）。例如：
 
 ```json
     "fields": "filing_year,fonds_no,retention,piece_no",
@@ -377,9 +324,7 @@ SQL参数为传送给报表模板的核心值，内容按照报表中的实际�
 - where：查询子句。
 - orderBy：排序字段列表。
 
-
-
-##### 返回信息
+#### 返回信息
 
 此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
 
@@ -389,7 +334,7 @@ SQL参数为传送给报表模板的核心值，内容按照报表中的实际�
 
 系统提供生成报表文件，并根据传入的参数要求，将文件回写到指定位置的功能。
 
-- 接口地址：http://host:port/report/getReportFile
+- 接口地址：http://host:port/report/getFile
 - 接口调用方式：POST
 - 传入参数形式：JSON
 
@@ -446,45 +391,16 @@ SQL参数为传送给报表模板的核心值，内容按照报表中的实际�
 
 
 
-##### 报表信息
+#### 报表信息
 
-```json
-	"reportFile": "template-e7e2ad60-596b-41d4-80f8-65991da9049a",
-   	"options": {
-        "docType": "PDF",
-        "dividePage": true
-    }
-```
-
-- reportFile：必填。报表模板ID。可从前述接口的结果中获得。
-- options：必填。报表生成参数。
-  - docType：预览格式，包括：PDF、Word、Excel、HTML、Image
-  - dividePage：分页。当预览格式为PDF、PNG时，此项默认为true；当为其他格式时，可以选择分页（true）或不分页（false）。
+与“getStream”接口参数内容相同。
 
 
+#### 数据域
 
+与“getStream”接口参数内容相同。
 
-##### 数据域
-
-必填！！
-
-data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。例如：
-
-```json
-    "data": [
-        {
-            "year": "2022",
-            "fonds": "维森集团",
-            "retention": "30年",
-            "box_no": "0001",
-            "barcode": "1234567891"
-        }
-    ],
-```
-
-
-
-##### 回写信息
+#### 回写信息
 
 本服务支持以下回写方式：文件路径（path）、http协议上传（url）、FTP服务上传（ftp）。
 
@@ -545,7 +461,7 @@ data域为传送给报表模板的核心值，其中为JSON数组。数组中的
 
 
 
-##### 回调信息
+#### 回调信息
 
 业务系统可以提供一个GET方式的回调接口，在视频文件转换、回写完毕后，本服务可以调用此接口，传回处理的状态。
 
@@ -571,9 +487,185 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 
 
-##### 返回信息
+#### 返回信息
 
-此接口给HTTPReponse返回HTML、PDF等格式的文件流，均可以在浏览器中直接显示。
+在文件生成、回写过程处理完毕后，接口返回信息示例如下：
+
+```json
+{
+    "flag": "success",
+    "message": "PDF reoprt create success. PDF file write back success. API call back success.",
+    "file": "123.pdf;456.pdf"
+}
+```
+
+- flag：处理状态。success，成功；error，错误，失败。
+- message：返回接口消息。
+- file：生成的文件名列表
+
+
+
+### “返回报表文件Base64”接口
+
+系统提供生成报表文件，并根据传入的参数要求，将文件Base64编码后返回。
+
+- 接口地址：http://host:port/report/getBase64
+- 接口调用方式：POST
+- 传入参数形式：JSON
+
+本例以“JSON生成报表”为例说明如何使用本接口；“查询数据库生成报表”的参数内容，可参考前述章节的说明，结合本章节内容组装。
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"template-e7e2ad60-596b-41d4-80f8-65991da9049a",
+	"fileName":"arcList",
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+    		"barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+    		"barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+    		"barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+    		"barcode":"1234567894"
+    	}
+    ],
+    "options": {
+        "docType": "PDF",
+        "dividePage": true
+    }
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+
+
+#### 报表信息
+
+与“getStream”接口参数内容相同。
+
+
+#### 数据域
+
+与“getStream”接口参数内容相同。
+
+#### 回调信息
+
+与“getFile”接口参数内容相同。
+
+#### 返回信息
+
+接口在处理完毕后，返回信息示例如下：
+
+```
+JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
+```
+
+返回Base64编码后的文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
+
+
+
+### “数据加入到MQ”接口
+
+系统提供生成报表文件，并根据传入的参数要求，将文件Base64编码后返回。
+
+- 接口地址：http://host:port/report/put2Mq
+- 接口调用方式：POST
+- 传入参数形式：JSON
+
+本例以“JSON生成报表”为例说明如何使用本接口；“查询数据库生成报表”的参数内容，可参考前述章节的说明，结合本章节内容组装。
+
+传入参数示例：
+
+```JSON
+{
+	"reportFile":"template-e7e2ad60-596b-41d4-80f8-65991da9049a",
+	"fileName":"arcList",
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+    		"barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+    		"barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+    		"barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+    		"barcode":"1234567894"
+    	}
+    ],
+    "options": {
+        "docType": "PDF",
+        "dividePage": true
+    }
+}
+```
+
+以下分块解释传入参数每部分的内容。
+
+
+
+#### 报表信息
+
+与“getStream”接口参数内容相同。
+
+
+#### 数据域
+
+与“getStream”接口参数内容相同。
+
+#### 回调信息
+
+与“getFile”接口参数内容相同。
+
+#### 返回信息
+
+接口在处理完毕后，返回信息示例如下：
+
+```
+JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
+```
+
+返回Base64编码后的文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
 
 
 
@@ -585,19 +677,11 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 系统提供多个接口，满足多种报表使用场景
 
-- 传入JSON，返回PDF报表给HTTP Reponse：http://host:port/jasper/getJson2Pdf
-- 传入JSON，返回HTML报表给HTTP Reponse：http://host:port/jasper/getJson2Html
-- 传入JSON，生成PDF报表文件，回写到指定位置：http://host:port/jasper/getJson2PdfFile
-- 传入JSON，生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/jasper/getJson2PdfBase64
-- 传入JSON，生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/jasper/getJson2PdfsBase64
-- 传入数据表查询参数（JSON格式），返回PDF报表给HTTP Reponse：http://host:port/jasper/getDb2Pdf
-- 传入数据表查询参数（JSON格式），返回HTML报表给HTTP Reponse：http://host:port/jasper/getDb2Html
-- 传入数据表查询参数（JSON格式），生成PDF报表文件，回写到指定位置：http://host:port/jasper/getDb2PdfFile
-- 传入数据表查询参数（JSON格式），生成PDF报表文件（单个），直接返回文件的Base64字符串：http://host:port/jasper/getDb2PdfBase64
-- 传入数据表查询参数（JSON格式），生成PDF报表文件（多个），通过JSON返回文件的Base64字符串：http://host:port/jasper/getDb2PdfsBase64
-- 传入JSON，加入到MQ队列异步处理，生成单个或多个PDF文件，回写到指定位置：http://host:port/jasper/put2Mq
-
-
+- http://host:port/jasper/getStream：传入JSON或数据表查询参数（JSON格式），返回报表给HTTP Reponse。
+- http://host:port/jasper/getFile：传入JSON或数据表查询参数（JSON格式），生成报表文件，回写到指定位置，并可回调接口。
+- http://host:port/jasper/getBase64：传入JSON或数据表查询参数（JSON格式），生成单个报表文件，直接返回文件的Base64字符串。
+- http://host:port/jasper/getBase64s：传入JSON或数据表查询参数（JSON格式），生成多个报表文件，通过JSON返回文件的Base64字符串。
+- http://host:port/jasper/put2Mq：传入JSON，加入到MQ队列异步处理，生成单个或多个报表文件，回写到指定位置。
 
 接口调用方式：POST
 
@@ -611,6 +695,8 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 {
 	"reportFile":"jzpz/jzpz",
 	"fileNameKey":"voucher_code",
+    "dataSource": "json",
+    "docType": "pdf",
     "writeBackType": "path",
     "writeBack":{
        "path":reportserver
@@ -771,7 +857,7 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 ### 输入信息
 
-系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的PDF文件。
+系统支持JSON格式的数据输入，并将数据传入JasperReport报表模板，由其生成符合要求格式的报表文件。
 
 注意：在生成列表格式的报表时，JasperReport没有办法在末尾页添加空行，所以需要在输入的JSON中传入对应格式的空白对象。此时，报表的“自适应行高”功能则不可用，否则会导致行数计算错误，输出报表格式错乱。
 
@@ -780,6 +866,8 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 ```json
 	"reportFile":"jzpz/jzpz",
 	"fileNameKey":"voucher_code",
+    "docType": "pdf",
+    "dataSource": "json",
 ```
 
 或
@@ -787,20 +875,16 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 ```json
 	"reportFile":"jzpz/jzpz",
     "fileName":"12345",
+    "docType": "pdf",
+    "dataSource": "db",
 ```
 
 - reportFile：必填。报表文件。此处需要输入报表模板在本服务所在相对路径和文件名（不含扩展名）。
 - fileNameKey 或 fileName：必填其一（不可同时存在）。
-  - 本服务允许对一个报表模板，一次传入多组数据，对应生成多个PDF报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
-  - 如果只需要将所有数据生成到一个PDF报表文件中，则需要配置“fileName”，并指定一个文件名。
-
-**注意**：如果调用的是“put2Mq”接口（传入MQ异步处理），则需要判断报表是否为“数据库查询”类型。如果是，则需要加入“dataSource”，并且值为“db”；数据源为“JSON”类型的，则不用添加此项。例如：
-
-```json
-	"dataSource":"db",
-	"reportFile":"jzpz/jzpz",
-    "fileName":"12345",
-```
+  - 本服务允许对一个报表模板，一次传入多组数据，对应生成多个报表文件。所以，需要在此指定从data域中的哪个key取值作为pdf的文件名。
+  - 如果只需要将所有数据生成到一个报表文件中，则需要配置“fileName”，并指定一个文件名。
+- docType：输出报表格式。值可以为：HTML、PDF、Word、Excel、CSV、XML、ODT
+- dataSource：数据源类型。与data中的内容对应。值可以为：json、db。
 
 
 
@@ -810,7 +894,42 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 data域为传送给报表模板的核心值，其中为JSON数组。数组中的内容按照报表中的实际设置而定。
 
-如果使用“数据库查询”类型的报表模板，则data域中可以存放报表模板中设置的参数以及参数值。例如：
+如果数据源类型为“json”，则内容为报表中的实际数据。例如：
+
+```json
+	"data":[
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0001",
+            "barcode":"1234567891"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0002",
+            "barcode":"1234567892"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"10年",
+    		"box_no":"0003",
+            "barcode":"1234567893"
+    	},
+    	{
+		    "year": "2022", 
+		    "fonds": "维森集团", 
+    		"retention":"30年",
+    		"box_no":"0004",
+            "barcode":"1234567894"
+    	}
+    ]
+```
+
+如果数据源类型为“db”（即使用“数据库查询”类型的报表模板），则data域中可以存放报表模板中设置的参数以及参数值。例如：
 
 ```json
     "data":[
@@ -922,7 +1041,7 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 
 #### 文件接口返回
 
-所有PDF报表文件接口，在文件生成、回写过程处理完毕后，接口返回信息示例如下：
+所有报表文件接口，在文件生成、回写过程处理完毕后，接口返回信息示例如下：
 
 ```json
 {
@@ -936,19 +1055,19 @@ http://10.11.12.13/callback.do?file=001-online&flag=success
 - message：返回接口消息。
 - file：生成的文件名列表
 
-#### 单个PDF文件Base64接口返回
+#### 单个报表文件Base64接口返回
 
-所有返回单个PDF文件Base64接口，在处理完毕后，返回信息示例如下：
+所有返回单个报表文件Base64接口，在处理完毕后，返回信息示例如下：
 
 ```
 JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9TdWJ0eXBlL0Zvcm0vRmlsdGVyL0ZsYXRlRGVjb2RlL1R5………………
 ```
 
-- 返回Base64编码后的PDF文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
+- 返回Base64编码后的文件的内容。可供前端页面直接将其放入iframe的src属性中显示。
 
-#### 多个PDF文件Base64接口返回
+#### 多个报表文件Base64接口返回
 
-所有返回多个PDF文件Base64接口，在处理完毕后，返回信息示例如下：
+所有返回多个文件Base64接口，在处理完毕后，返回信息示例如下：
 
 ```json
 {

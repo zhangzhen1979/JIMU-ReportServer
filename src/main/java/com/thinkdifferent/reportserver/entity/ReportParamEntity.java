@@ -1,6 +1,6 @@
 package com.thinkdifferent.reportserver.entity;
 
-import com.thinkdifferent.reportserver.service.Data2PdfService;
+import com.thinkdifferent.reportserver.service.Data2ReportService;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.fill.JRFileVirtualizer;
 import net.sf.json.JSONArray;
@@ -28,6 +28,13 @@ public class ReportParamEntity {
      *      单文件Base64（singleBase64）、多文件Base64（multiBase64）
      */
     private String outputType;
+    /**
+     * 报表输出的格式：
+     * 公共：HTML、PDF、Word（docx）、Excel（Xlsx）、
+     * JasperReport：CSV、XML、ODT
+     * XMReport：Image（png）
+     */
+    private String docType;
 
     /**
      * 报表模板的路径（不包含“reportfile”。如果报表中有子报表、图片，会用到这个路径参数）
@@ -42,17 +49,21 @@ public class ReportParamEntity {
      */
     private String outputPathFileName;
     /**
-     * 传入的JSON数据对象（JSONObject）
+     * 传入的JSON对象（JSONObject）
      */
-    private JSONObject joData;
+    private JSONObject joInput;
     /**
-     * 传入的JSON数组（JSONArray）
+     * 传入的data中的JSON数组（JSONArray）
      */
     private JSONArray jaData;
     /**
+     * 传入的data中的JSON对象（JSONObject）
+     */
+    private JSONObject joData;
+    /**
      * Service对象
      */
-    private Data2PdfService data2PdfService;
+    private Data2ReportService data2ReportService;
     /**
      * JasperReport报表模板对象
      */
@@ -66,12 +77,6 @@ public class ReportParamEntity {
      * 数据库连接对象
      */
     private Connection conn;
-
-    /**
-     * 报表数据库查询参数：table\where\orderBy
-     */
-    private JSONArray jaTableParams;
-
 
     public String getOutputType() {
         return outputType;
@@ -89,12 +94,12 @@ public class ReportParamEntity {
         this.jrFileVirtualizer = jrFileVirtualizer;
     }
 
-    public JSONObject getJoData() {
-        return joData;
+    public JSONObject getJoInput() {
+        return joInput;
     }
 
-    public void setJoData(JSONObject joData) {
-        this.joData = joData;
+    public void setJoInput(JSONObject joInput) {
+        this.joInput = joInput;
     }
 
     public JSONArray getJaData() {
@@ -105,12 +110,12 @@ public class ReportParamEntity {
         this.jaData = jaData;
     }
 
-    public Data2PdfService getData2PdfService() {
-        return data2PdfService;
+    public Data2ReportService getData2ReportService() {
+        return data2ReportService;
     }
 
-    public void setData2PdfService(Data2PdfService data2PdfService) {
-        this.data2PdfService = data2PdfService;
+    public void setData2ReportService(Data2ReportService data2ReportService) {
+        this.data2ReportService = data2ReportService;
     }
 
     public JasperReport getJasperReport() {
@@ -161,11 +166,19 @@ public class ReportParamEntity {
         this.conn = conn;
     }
 
-    public JSONArray getJaTableParams() {
-        return jaTableParams;
+    public String getDocType() {
+        return docType;
     }
 
-    public void setJaTableParams(JSONArray jaTableParams) {
-        this.jaTableParams = jaTableParams;
+    public void setDocType(String docType) {
+        this.docType = docType;
+    }
+
+    public JSONObject getJoData() {
+        return joData;
+    }
+
+    public void setJoData(JSONObject joData) {
+        this.joData = joData;
     }
 }

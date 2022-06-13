@@ -45,15 +45,18 @@ public class RabbitMQConfig
 
     // 配置“交换机”
     // 接收队列交换机
-    public static final String EXECHANGE_RECEIVE = "exchange_receive";//交换机
+    public static final String EXECHANGE_JASPER = "exchange_jasper";//交换机
+    public static final String EXECHANGE_XM = "exchange_xm";//交换机
 
     // 配置“队列名称”
     // 接收队列名称
-    public static final String QUEUE_RECEIVE = "queue_receive";//请求队列名称
+    public static final String QUEUE_JASPER = "queue_jasper";//请求队列名称
+    public static final String QUEUE_XM = "queue_xm";//请求队列名称
 
     // 配置“路由关键字”
     // 接收队列路由关键字
-    public static final String ROUTING_RECEIVE = "routing_receive";//路由关键字
+    public static final String ROUTING_JASPER = "routing_jasper";//路由关键字
+    public static final String ROUTING_XM = "routing_xm";//路由关键字
 
     
     @Bean
@@ -94,18 +97,25 @@ public class RabbitMQConfig
     
     // 接收  交换机
     @Bean
-    public DirectExchange defaultExchange_receive()
-    {
-        //默认是交换机持久化
-        return new DirectExchange(EXECHANGE_RECEIVE);
+    public DirectExchange defaultExchange_jasper(){
+        return new DirectExchange(EXECHANGE_JASPER);
+    }
+    @Bean
+    public DirectExchange defaultExchange_xm(){
+        return new DirectExchange(EXECHANGE_XM);
     }
 
     
     // 接收  队列
     @Bean
-    public Queue queue_recieve()
+    public Queue queue_jasper()
     {
-        return new Queue(QUEUE_RECEIVE, true); //队列持久
+        return new Queue(QUEUE_JASPER, true);
+    }
+    @Bean
+    public Queue queue_xm()
+    {
+        return new Queue(QUEUE_XM, true);
     }
 
 
@@ -114,10 +124,16 @@ public class RabbitMQConfig
      * @return
      */
     @Bean
-    public Binding binding_queue_reecive()
+    public Binding binding_queue_jasper()
     {
         // 接收队列和接收交换机绑定
-        return BindingBuilder.bind(queue_recieve()).to(defaultExchange_receive()).with(ROUTING_RECEIVE);
+        return BindingBuilder.bind(queue_jasper()).to(defaultExchange_jasper()).with(ROUTING_JASPER);
+    }
+    @Bean
+    public Binding binding_queue_xm()
+    {
+        // 接收队列和接收交换机绑定
+        return BindingBuilder.bind(queue_xm()).to(defaultExchange_xm()).with(ROUTING_XM);
     }
 
 
