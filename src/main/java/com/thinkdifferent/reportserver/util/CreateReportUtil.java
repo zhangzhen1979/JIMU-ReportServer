@@ -116,6 +116,10 @@ public class CreateReportUtil {
         }
 
         //报表文件临时存储设置，切记！！此临时文件夹一定要真实存在！！！
+        File fileCacheDir = new File(System.getProperty("user.dir") + "/cacheDir/");
+        if(!fileCacheDir.exists() || !fileCacheDir.isDirectory()){
+            fileCacheDir.mkdirs();
+        }
         JRFileVirtualizer jrFileVirtualizer = new JRFileVirtualizer(2, "cacheDir");
         jrFileVirtualizer.setReadOnly(true);
         reportParamEntity.setJrFileVirtualizer(jrFileVirtualizer);

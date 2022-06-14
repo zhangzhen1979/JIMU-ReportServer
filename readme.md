@@ -1,7 +1,7 @@
 # Report Server 报表服务
 
 将JSON数据生成报表、将报表模板中设置的SQL查询结果生成报表。
-支持生成PDF文件，支持回写到指定位置；支持直接返回HTTP Reponse。
+支持生成PDF、HTML、docx、xlsx等文件，支持回写到指定位置；支持直接返回HTTP Reponse。
 
 ---
 
@@ -14,17 +14,17 @@
 
 ## 特性
 
-* 支持多种文件输入方式：文件路径、http（get）下载、ftp，可扩展
+* 支持多种输出方式：文件路径、http、ftp，可扩展
 * 接口方式：REST，POST方式。
 * 参数格式：JSON。
 * 数据源：JSON / DB（JSON中可以设置查询参数，与报表模板中参数匹配）。
-* 报表引擎：JasperReport、XMReport（开发中）。
+* 报表引擎：JasperReport、XMReport。
 * 报表生成方式：
   * HTTP Reponse：页面可直接显示。
     * HTML：返回html文件流，可直接用于页面展示。但不建议用于打印，此种模式对纸张的兼容性不好。
     * PDF：返回pdf文件流，可直接用于页面展示、打印。
 
-  * PDF文件：支持直接回写（文件路径、ftp），也可异步回写（MQ队列处理）。可同时生成多个报表文件。
+  * 报表文件：支持直接回写（文件路径、ftp），也可异步回写（MQ队列处理）。可同时生成多个报表文件。
 
 * 支持结果回调。
 
@@ -43,6 +43,8 @@
    │  application.yml
    │  reportserver-{版本号}.jar
    │  {项目名}.license
+   │  reportfile【文件夹】
+   │  cacheDir【文件夹】
    ```
 
 2. 修改配置`application.yml`：

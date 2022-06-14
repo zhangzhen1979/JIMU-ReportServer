@@ -21,6 +21,25 @@
 
 ------
 
+## 文件结构说明
+
+文件目录结构
+
+```
+│  application.yml
+│  reportserver-{版本号}.jar
+│  {项目名}.license
+│  reportfile【文件夹】
+│  cacheDir【文件夹】
+```
+
+- application.yml：核心配置文件，服务所有的配置项均在此文件中。
+- reportserver-{版本号}.jar：服务jar包，可执行。命令：java -jar reportserver-{版本号}.jar
+- reportfile：JasperReport报表模板文件夹（*.jasper)，其中可以创建子文件夹存储报表模板文件，只要在传入参数中加入相对路径即可。
+- cacheDir：JasperReport引擎的缓存文件夹，必须存在！
+
+
+
 ## 配置说明
 
 本服务的所有配置信息均在于jar包同级文件夹中的application.yml中，默认内容如下：
